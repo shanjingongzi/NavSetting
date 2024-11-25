@@ -12,10 +12,12 @@
 #include <qcombobox.h>
 #include <qlabel.h>
 #include <qlayout.h>
+#include <qlayoutitem.h>
 #include <qnamespace.h>
 #include <qpushbutton.h>
 #include <qserialport.h>
 #include <qserialportinfo.h>
+#include <qsizepolicy.h>
 #include <qspinbox.h>
 #include <qtabwidget.h>
 #include <qwidget.h>
@@ -101,7 +103,26 @@ void NavSettingView::InitializeAdSettingPanel() {
   };
   QVBoxLayout *page1Layout = new QVBoxLayout();
   QVBoxLayout *page2Layout = new QVBoxLayout();
+  {
+   auto InitTitleFunc=[=](){
+    QHBoxLayout *labelLayout=new QHBoxLayout();
+    QLabel *lab=new QLabel(tr("channel"),this);
+    labelLayout->addWidget(lab);
+    lab=new QLabel(tr("reverse"),this);
+    labelLayout->addWidget(lab);
+    lab=new QLabel(tr("min"),this);
+    labelLayout->addWidget(lab);
+    lab=new QLabel(tr("mid"),this);
+    labelLayout->addWidget(lab);
+    lab=new QLabel(tr("max"),this);
+    labelLayout->addWidget(lab);
+    return labelLayout;
+   }; 
+   page1Layout->addLayout(InitTitleFunc());
+   page2Layout->addLayout(InitTitleFunc());
+  }
   containerLayout->addLayout(page1Layout);
+  containerLayout->addSpacerItem(new QSpacerItem(QSizePolicy::Expanding,QSizePolicy::Expanding,QSizePolicy::Expanding,QSizePolicy::Expanding));
   containerLayout->addLayout(page2Layout);
   for (int i = 0; i < 16; ++i) {
     if (i < 8) {
@@ -112,4 +133,23 @@ void NavSettingView::InitializeAdSettingPanel() {
   }
 }
 
-void NavSettingView::InitializeBottomBar() {}
+void NavSettingView::InitializeBottomBar() 
+{
+    QHBoxLayout *bottomLayout=new QHBoxLayout();
+    layout->addLayout(bottomLayout);
+    QPushButton *readConfig=new QPushButton(this);
+    readConfig->setText(tr("read config"));
+    bottomLayout->addWidget(readConfig);
+
+    QPushButton*saveConfig=new QPushButton(this);
+    saveConfig->setText(tr("save config"));
+    bottomLayout->addWidget(saveConfig);
+    layout->addLayout(bottomLayout);
+
+    bottomLayout->addSpacerItem(new QSpacerItem(QSizePolicy::Expanding,QSizePolicy::Expanding,QSizePolicy::Expanding,QSizePolicy::Expanding));
+    QPushButton *calibration=new QPushButton(this);
+    calibration->setText(tr("calibration"));
+    bottomLayout->addWidget(calibration);
+    layout->addSpacerItem(new QSpacerItem(QSizePolicy::Expanding,QSizePolicy::Expanding,QSizePolicy::Expanding,QSizePolicy::Expanding));
+    
+}

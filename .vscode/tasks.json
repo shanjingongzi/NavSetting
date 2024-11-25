@@ -1,0 +1,133 @@
+{
+        "version": "2.0.0" ,
+        "tasks":[
+        {
+                "label":"Generate",
+                "type":"shell",
+                "command":"cmake ",
+                "args":
+                [
+                        "-S",
+                        "${workspaceFolder}",
+                        "-B",
+                        "${workspaceFolder}/build",                    
+                        "-G",
+                        "Ninja",
+                        "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON",
+                ],                 
+                "options": {
+                        "cwd": "${workspaceFolder}"
+                },
+                "problemMatcher":["$gcc","$msCompile"],
+                "presentation": {
+                        "echo": true,
+                        "reveal": "always",
+                        "focus": false,
+                        "panel": "shared",
+                        "showReuseMessage": true,
+                        "clear": false
+                },
+                "group": 
+                {
+                        "kind": "build",
+                        "isDefault":true
+                }
+        }, 
+        {
+                "label":"Build",
+                "type":"shell",
+                "command":"cmake",
+                "args":
+                [
+                        "--build",
+                        "./build",
+                        "--",
+                        "-j12"
+                ],                 
+                "options": {
+                        "cwd": "${workspaceFolder}"
+                },
+                "problemMatcher":{
+                        "owner": "cl",
+                        "fileLocation": [
+                            "search",
+                            {
+                                "include": [
+                                    "${workspaceFolder}"
+                                ],
+                                "exclude": []
+                            }
+                        ],
+                        "pattern": {
+                            "regexp": "^(.+).obj\\s:\\s(.+):\\s(.+)$",
+                            "file": 1,
+                            "location": 2,
+                            "severity": 3,
+                        }
+                },
+                "presentation": {
+                        "showReuseMessage": false,
+                },
+                "group": 
+                {
+                        "kind": "build",
+                        "isDefault":true
+                },
+                "dependsOn":[
+                       "Generate" 
+                ],
+        },
+        {
+                "label":"Install",
+                "type":"shell",
+                "command":"cmake",
+                "args":
+                [
+                        "--install",
+                        "./build",
+                        "--prefix",
+                        "./install",
+                        "--config",
+                        "Debug"
+                ],                 
+                "options": {
+                        "cwd": "${workspaceFolder}"
+                },
+                "problemMatcher":[],
+                "presentation": {
+                        "showReuseMessage": false,
+                },
+                "group": 
+                {
+                        "kind": "build",
+                        "isDefault":true
+                },
+                "dependsOn":[
+                       "Build" 
+                ]
+        }, 
+        {
+                "label":"Clean",
+                "type":"shell",
+                "command":"rm",
+                "args":
+                [
+                        "${workspaceFolder}/build",
+                        "-r",
+                        "-force"
+                ],                 
+                "options": {
+                        "cwd": "${workspaceFolder}"
+                },
+                "problemMatcher":[],
+                "presentation": {
+                        "showReuseMessage": false,
+                },
+                "group": 
+                {
+                        "kind": "build",
+                        "isDefault":true
+                }
+        } 
+        ]        
+}

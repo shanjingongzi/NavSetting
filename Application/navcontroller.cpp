@@ -1,9 +1,16 @@
 #include "navcontroller.h"
 #include "navsettingview.h"
 
-NavController::NavController(QWidget *parent) {
-  view = new NavSettingView(parent);
+NavController::NavController(QWidget* parent)
+{
+    view = new NavSettingView(parent);
 }
-void NavController::Initialize() { view->Initialize(); }
+void NavController::Initialize()
+{
+    view->Initialize();
+}
 
-QWidget *NavController::View() { return view; }
+QWidget* NavController::View()
+{
+    return view;
+}

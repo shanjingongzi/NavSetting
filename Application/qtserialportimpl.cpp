@@ -1,6 +1,3 @@
 #include "qtserialportimpl.h"
 
-QtSerialPortImpl::QtSerialPortImpl()
-{
-
-}
+QtSerialPortImpl::QtSerialPortImpl() {}

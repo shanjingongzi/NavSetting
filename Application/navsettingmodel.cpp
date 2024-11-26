@@ -1,6 +1,3 @@
 #include "navsettingmodel.h"
 
-NavSettingModel::NavSettingModel()
-{
-
-}
+NavSettingModel::NavSettingModel() {}

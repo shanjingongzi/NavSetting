@@ -8,4 +8,4 @@ public:
     SerialPort();
 };
 
-#endif // SERIALPORT_H
+#endif   // SERIALPORT_H

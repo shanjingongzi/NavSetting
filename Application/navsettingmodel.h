@@ -8,4 +8,4 @@ public:
     NavSettingModel();
 };
 
-#endif // NAVSETTINGMODEL_H
+#endif   // NAVSETTINGMODEL_H

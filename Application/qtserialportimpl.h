@@ -8,4 +8,4 @@ public:
     QtSerialPortImpl();
 };
 
-#endif // QTSERIALPORTIMPORT_H
+#endif   // QTSERIALPORTIMPORT_H

@@ -3,6 +3,7 @@
 #include <QComboBox>
 #include <QHBoxLayout>
 #include <QLabel>
+#include <QProgressBar>
 #include <QPushButton>
 #include <QSerialPort>
 #include <QSerialPortInfo>
@@ -14,6 +15,7 @@
 #include <qlayout.h>
 #include <qlayoutitem.h>
 #include <qnamespace.h>
+#include <qprogressbar.h>
 #include <qpushbutton.h>
 #include <qserialport.h>
 #include <qserialportinfo.h>
@@ -22,8 +24,10 @@
 #include <qtabwidget.h>
 #include <qwidget.h>
 
-NavSettingView::NavSettingView(QWidget* parent)
+
+NavSettingView::NavSettingView(int channelNum, QWidget* parent)
     : QWidget(parent)
+    , channelNum{channelNum}
 {
     layout = new QVBoxLayout(this);
     layout->setAlignment(Qt::AlignTop);
@@ -82,6 +86,37 @@ void NavSettingView::InitializeChannelPanel()
     QWidget* sbusWidget1 = new QWidget(this);
     QWidget* sbusWidget2 = new QWidget(this);
 
+    auto InitFunc = [this](QWidget* widget) {
+        QVBoxLayout* page1Layout     = new QVBoxLayout();
+        QVBoxLayout* page2Layout     = new QVBoxLayout();
+        QHBoxLayout* containerLayout = new QHBoxLayout(widget);
+        containerLayout->addLayout(page1Layout);
+        containerLayout->addLayout(page2Layout);
+        for (int i = 0; i < channelNum; ++i) {
+            QHBoxLayout* itemLayout = new QHBoxLayout();
+            QLabel* title           = new QLabel(QString::number(i), this);
+            QProgressBar* bar       = new QProgressBar(this);
+            bar->setTextVisible(false);
+            bar->setRange(-100, 100);
+            bar->setValue(0);
+            QSpinBox* spinBox = new QSpinBox(this);
+            spinBox->setValue(0);
+            QComboBox* comBox = new QComboBox(this);
+            itemLayout->addWidget(title);
+            itemLayout->addWidget(bar);
+            itemLayout->addWidget(spinBox);
+            itemLayout->addWidget(comBox);
+            if (i < channelNum / 2) {
+                page1Layout->addLayout(itemLayout);
+            }
+            else {
+                page2Layout->addLayout(itemLayout);
+            }
+            channelItems.push_back({bar, spinBox, comBox});
+        }
+    };
+    InitFunc(sbusWidget1);
+    InitFunc(sbusWidget2);
     container->addTab(sbusWidget1, tr("sbus1"));
     container->addTab(sbusWidget2, tr("sbus2"));
 }
@@ -105,6 +140,7 @@ void NavSettingView::InitializeAdSettingPanel()
         itemLayout->addWidget(mid);
         QSpinBox* max = new QSpinBox(this);
         itemLayout->addWidget(max);
+        adSettingItems.push_back({reverseChkBox, min, mid, max});
     };
     QVBoxLayout* page1Layout = new QVBoxLayout();
     QVBoxLayout* page2Layout = new QVBoxLayout();
@@ -129,8 +165,8 @@ void NavSettingView::InitializeAdSettingPanel()
     containerLayout->addLayout(page1Layout);
     containerLayout->addSpacerItem(new QSpacerItem(QSizePolicy::Expanding, QSizePolicy::Expanding, QSizePolicy::Expanding, QSizePolicy::Expanding));
     containerLayout->addLayout(page2Layout);
-    for (int i = 0; i < 16; ++i) {
-        if (i < 8) {
+    for (int i = 0; i < channelNum; ++i) {
+        if (i < channelNum / 2) {
             InitFunc(i, page1Layout, QString("C%1").arg(i));
         }
         else {
@@ -146,15 +182,20 @@ void NavSettingView::InitializeBottomBar()
     QPushButton* readConfig = new QPushButton(this);
     readConfig->setText(tr("read config"));
     bottomLayout->addWidget(readConfig);
+    connect(readConfig, &QPushButton::clicked, [this]() { emit Read(); });
 
     QPushButton* saveConfig = new QPushButton(this);
     saveConfig->setText(tr("save config"));
     bottomLayout->addWidget(saveConfig);
     layout->addLayout(bottomLayout);
+    connect(saveConfig, &QPushButton::clicked, [this]() { emit Write(); });
 
     bottomLayout->addSpacerItem(new QSpacerItem(QSizePolicy::Expanding, QSizePolicy::Expanding, QSizePolicy::Expanding, QSizePolicy::Expanding));
     QPushButton* calibration = new QPushButton(this);
     calibration->setText(tr("calibration"));
     bottomLayout->addWidget(calibration);
     layout->addSpacerItem(new QSpacerItem(QSizePolicy::Expanding, QSizePolicy::Expanding, QSizePolicy::Expanding, QSizePolicy::Expanding));
+    connect(calibration, &QPushButton::clicked, [this]() { emit Calibration(); });
 }
+
+void NavSettingView::Connect() {}

@@ -34,9 +34,7 @@ void NavController::Initialize()
             StopListen();
         }
     });
-    connect(view,&NavSettingView::StopListen,[this](){
-        this->StopListen();
-    });
+    connect(view, &NavSettingView::StopListen, [this]() { this->StopListen(); });
 }
 
 QWidget* NavController::View()
@@ -52,10 +50,9 @@ void NavController::StartListen()
             if (!enableListen.load(std::memory_order_relaxed)) {
                 break;
             }
-            auto msg=device->Read();
-            msg=msg.toHex();
+            auto msg = device->Read();
             emit MessageChanged(msg);
-            qDebug()<<msg;
+            qDebug() << msg;
         }
     });
     enableListen.store(true, std::memory_order_relaxed);

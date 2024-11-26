@@ -10,6 +10,9 @@ MainWindow::MainWindow(QWidget* parent)
     controller = new NavController(this);
     controller->Initialize();
     setCentralWidget(controller->View());
+    connect(controller,&NavController::MessageChanged,[this](const QString &msg){
+        this->statusBar()->showMessage(msg);
+    });
 }
 
 MainWindow::~MainWindow()

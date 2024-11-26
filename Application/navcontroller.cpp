@@ -6,6 +6,7 @@
 #include "serialport.h"
 #include <atomic>
 #include <chrono>
+#include <qdebug.h>
 #include <thread>
 
 
@@ -33,6 +34,9 @@ void NavController::Initialize()
             StopListen();
         }
     });
+    connect(view,&NavSettingView::StopListen,[this](){
+        this->StopListen();
+    });
 }
 
 QWidget* NavController::View()
@@ -48,7 +52,10 @@ void NavController::StartListen()
             if (!enableListen.load(std::memory_order_relaxed)) {
                 break;
             }
-            device->Read();
+            auto msg=device->Read();
+            msg=msg.toHex();
+            emit MessageChanged(msg);
+            qDebug()<<msg;
         }
     });
     enableListen.store(true, std::memory_order_relaxed);

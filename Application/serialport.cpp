@@ -9,7 +9,7 @@ SerialPort::~SerialPort()
 }
 bool SerialPort::Open()
 {
-    impl->Open();
+    return impl->Open();
 }
 bool SerialPort::Close()
 {

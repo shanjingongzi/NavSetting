@@ -196,6 +196,13 @@ void NavSettingView::InitializeBottomBar()
     bottomLayout->addWidget(calibration);
     layout->addSpacerItem(new QSpacerItem(QSizePolicy::Expanding, QSizePolicy::Expanding, QSizePolicy::Expanding, QSizePolicy::Expanding));
     connect(calibration, &QPushButton::clicked, [this]() { emit Calibration(); });
+    
+    QPushButton *stopListen=new QPushButton(this);
+    stopListen->setText("stop listen");
+    bottomLayout->addWidget(stopListen);
+    connect(stopListen,&QPushButton::clicked,[this](){
+        emit StopListen();
+    });
 }
 
 void NavSettingView::Connect() {}

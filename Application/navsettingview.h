@@ -34,7 +34,7 @@ signals:
     void MinimalHelmChanged(int channel, int val);
     void MiddleHeelmChanged(int channel, int val);
     void MaximalHelmChanged(int channel, int val);
-
+    void StopListen();
 private:
     struct ChannelItem
     {

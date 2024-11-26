@@ -13,7 +13,7 @@ bool SerialPort::Open()
 }
 bool SerialPort::Close()
 {
-    impl->Close();
+    return impl->Close();
 }
 QByteArray SerialPort::Read()
 {

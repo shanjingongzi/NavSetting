@@ -36,6 +36,7 @@ NavSettingView::NavSettingView(int channelNum, QWidget* parent)
 void NavSettingView::Initialize()
 {
     InitializeTopBar();
+    InitializeDebug();
     InitializeChannelPanel();
     InitializeAdSettingPanel();
     InitializeBottomBar();
@@ -78,6 +79,30 @@ void NavSettingView::InitializeTopBar()
     layout->addLayout(toolBarLayout);
 }
 
+void NavSettingView::InitializeDebug()
+{
+    QHBoxLayout *itemLayout=new QHBoxLayout();
+    itemLayout->setAlignment(Qt::AlignRight);
+    layout->addLayout(itemLayout);
+    QPushButton *button=new QPushButton(this);
+    connect(button,&QPushButton::clicked,[this](){
+        emit RequestReverse();
+    });
+    button->setText("request reverse"); 
+    itemLayout->addWidget(button);
+    button=new QPushButton(this);
+    connect(button,&QPushButton::clicked,[this](){
+        emit RequestMaximalHelm();
+    });
+    button->setText("request maximal helm");
+    itemLayout->addWidget(button);
+    button=new QPushButton(this);
+    connect(button,&QPushButton::clicked,[this](){
+        emit RequestSendQueue();
+    });
+    button->setText("request send queue");
+    itemLayout->addWidget(button);
+}
 void NavSettingView::InitializeChannelPanel()
 {
     QTabWidget* container = new QTabWidget(this);

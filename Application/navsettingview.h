@@ -19,6 +19,7 @@ public:
     NavSettingView(int channelNum, QWidget* parent = nullptr);
     void Initialize();
     void InitializeTopBar();
+    void InitializeDebug();
     void InitializeChannelPanel();
     void InitializeBottomBar();
     void InitializeAdSettingPanel();
@@ -35,6 +36,9 @@ signals:
     void MiddleHeelmChanged(int channel, int val);
     void MaximalHelmChanged(int channel, int val);
     void StopListen();
+    void RequestReverse();
+    void RequestMaximalHelm();
+    void RequestSendQueue();
 private:
     struct ChannelItem
     {

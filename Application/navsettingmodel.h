@@ -18,6 +18,7 @@ class NavSettingModel
 {
 public:
     NavSettingModel(int maxChannel);
+    int Size() { return data.size(); }
     void SetMapSlot(int channel, int val);
     int GetMapSlot(int channel);
     void SetPosition(int channel, int position);

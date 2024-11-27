@@ -1,5 +1,6 @@
 #ifndef NAVSETTINGVIEW_H
 #define NAVSETTINGVIEW_H
+#include "navsettingmodel.h"
 #include <QVBoxLayout>
 #include <QVector>
 #include <QWidget>
@@ -11,12 +12,12 @@
 #include <qwidget.h>
 
 
-
 class NavSettingView : public QWidget
 {
     Q_OBJECT
 public:
     NavSettingView(int channelNum, QWidget* parent = nullptr);
+
     void Initialize();
     void InitializeTopBar();
     void InitializeDebug();
@@ -24,6 +25,7 @@ public:
     void InitializeBottomBar();
     void InitializeAdSettingPanel();
     void Connect();
+    void SetModel(NavSettingModel* model);
 signals:
     void Open(const QString& name);
     void Close();
@@ -39,6 +41,12 @@ signals:
     void RequestReverse();
     void RequestMaximalHelm();
     void RequestSendQueue();
+    void WriteSignalSource();
+    void WriteReverse();
+    void WriteMinimalHelm();
+    void WriteMaximalHelm();
+    void WriteMiddleHelm();
+
 private:
     struct ChannelItem
     {

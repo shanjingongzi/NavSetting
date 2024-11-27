@@ -1,4 +1,5 @@
 #include "navsettingview.h"
+#include "navsettingmodel.h"
 #include <QCheckBox>
 #include <QComboBox>
 #include <QHBoxLayout>
@@ -25,6 +26,18 @@
 #include <qwidget.h>
 
 
+QString GetPhysicalSignalSourceName(int index)
+{
+    if (index < 17) {
+        return QString("AD%1").arg(index);
+    }
+    else if (index > 28) {
+        return QString("SW%1").arg(index - 28);
+    }
+    else {
+        return QString("KEY%1").arg(index - 16);
+    }
+}
 NavSettingView::NavSettingView(int channelNum, QWidget* parent)
     : QWidget(parent)
     , channelNum{channelNum}
@@ -81,26 +94,44 @@ void NavSettingView::InitializeTopBar()
 
 void NavSettingView::InitializeDebug()
 {
-    QHBoxLayout *itemLayout=new QHBoxLayout();
+    QHBoxLayout* itemLayout = new QHBoxLayout();
     itemLayout->setAlignment(Qt::AlignRight);
     layout->addLayout(itemLayout);
-    QPushButton *button=new QPushButton(this);
-    connect(button,&QPushButton::clicked,[this](){
-        emit RequestReverse();
-    });
-    button->setText("request reverse"); 
+    QPushButton* button = new QPushButton(this);
+    connect(button, &QPushButton::clicked, [this]() { emit RequestReverse(); });
+    button->setText("request reverse");
     itemLayout->addWidget(button);
-    button=new QPushButton(this);
-    connect(button,&QPushButton::clicked,[this](){
-        emit RequestMaximalHelm();
-    });
+    button = new QPushButton(this);
+    connect(button, &QPushButton::clicked, [this]() { emit RequestMaximalHelm(); });
     button->setText("request maximal helm");
     itemLayout->addWidget(button);
-    button=new QPushButton(this);
-    connect(button,&QPushButton::clicked,[this](){
-        emit RequestSendQueue();
-    });
+    button = new QPushButton(this);
+    connect(button, &QPushButton::clicked, [this]() { emit RequestSendQueue(); });
     button->setText("request send queue");
+    itemLayout->addWidget(button);
+    button = new QPushButton(this);
+    connect(button, &QPushButton::clicked, [this]() { emit WriteSignalSource(); });
+    button->setText("write signal source");
+    itemLayout->addWidget(button);
+
+    button = new QPushButton(this);
+    connect(button, &QPushButton::clicked, [this]() { emit WriteReverse(); });
+    button->setText("write reverse");
+    itemLayout->addWidget(button);
+
+    button = new QPushButton(this);
+    connect(button, &QPushButton::clicked, [this]() { emit WriteMinimalHelm(); });
+    button->setText("write minimal helm");
+    itemLayout->addWidget(button);
+
+    button = new QPushButton(this);
+    connect(button, &QPushButton::clicked, [this]() { emit WriteMaximalHelm(); });
+    button->setText("write maximal helm");
+    itemLayout->addWidget(button);
+
+    button = new QPushButton(this);
+    connect(button, &QPushButton::clicked, [this]() { emit WriteMiddleHelm(); });
+    button->setText("write middle helm");
     itemLayout->addWidget(button);
 }
 void NavSettingView::InitializeChannelPanel()
@@ -127,6 +158,9 @@ void NavSettingView::InitializeChannelPanel()
             QSpinBox* spinBox = new QSpinBox(this);
             spinBox->setValue(0);
             QComboBox* comBox = new QComboBox(this);
+            for (int i = 1; i < 35; ++i) {
+                comBox->addItem(GetPhysicalSignalSourceName(i));
+            }
             itemLayout->addWidget(title);
             itemLayout->addWidget(bar);
             itemLayout->addWidget(spinBox);
@@ -228,4 +262,29 @@ void NavSettingView::InitializeBottomBar()
     connect(stopListen, &QPushButton::clicked, [this]() { emit StopListen(); });
 }
 
-void NavSettingView::Connect() {}
+void NavSettingView::Connect()
+{
+    for (int i = 0; i < channelItems.size(); ++i) {
+        auto iter = channelItems[i];
+        connect(iter.mapper, &QComboBox::currentIndexChanged, [i, this](int slot) { emit MapperChanged(i + 1, slot); });
+    }
+    for (int i = 0; i < adSettingItems.size(); ++i) {
+        auto iter = adSettingItems[i];
+        connect(iter.reverse, &QCheckBox::checkStateChanged, [i, this](Qt::CheckState state) { emit ReveseChanged(i, state == Qt::Checked ? true : false); });
+        connect(iter.minHelm, &QSpinBox::valueChanged, [i, this](int val) { emit MinimalHelmChanged(i, val); });
+        connect(iter.midHelm, &QSpinBox::valueChanged, [i, this](int val) { emit MiddleHeelmChanged(i, val); });
+        connect(iter.maxHelm, &QSpinBox::valueChanged, [i, this](int val) { emit MaximalHelmChanged(i, val); });
+    }
+}
+
+void NavSettingView::SetModel(NavSettingModel* model)
+{
+    for (auto iter : channelItems) {}
+    for (int i = 0; i < adSettingItems.size(); ++i) {
+        auto& iter = adSettingItems[i];
+        iter.reverse->setCheckState(model->GetReverse(i) ? Qt::Checked : Qt::Unchecked);
+        iter.minHelm->setValue(model->GetMinimalHelm(i));
+        iter.maxHelm->setValue(model->GetMaximalHelm(i));
+        iter.midHelm->setValue(model->GetMiddleHelm(i));
+    }
+}

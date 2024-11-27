@@ -14,8 +14,8 @@
 
 NavController::NavController(QWidget* parent)
 {
-    view  = new NavSettingView(16, parent);
-    model = new NavSettingModel(16);
+    view  = new NavSettingView(32, parent);
+    model = new NavSettingModel(32);
     enableListen.store(false, std::memory_order_relaxed);
 }
 void NavController::Initialize()
@@ -39,9 +39,7 @@ void NavController::Initialize()
     connect(view, &NavSettingView::StopListen, [this]() { this->StopListen(); });
 
     connect(view, &NavSettingView::RequestReverse, [this]() {
-        if (device) {
-            device->Write(Command::GenerateMappSlot(1));
-        }
+        if (device) {}
     });
     connect(view, &NavSettingView::RequestMaximalHelm, [this]() {
         if (device) {
@@ -53,6 +51,36 @@ void NavController::Initialize()
             device->Write(Command::requestSendQueueCmd, sizeof(Command::requestSendQueueCmd));
         }
     });
+    connect(view, &NavSettingView::WriteSignalSource, [this]() {
+        if (device) {
+            device->Write(Command::GenerateMappSlotCmd(Command::sbus1, model));
+        }
+    });
+    connect(view, &NavSettingView::WriteReverse, [this]() {
+        if (device) {
+            device->Write(Command::GenerateReverseCmd(Command::sbus1, model));
+        }
+    });
+    connect(view, &NavSettingView::WriteMinimalHelm, [this]() {
+        if (device) {
+            device->Write(Command::GenerateMinimalHelmCmd(Command::sbus1, model));
+        }
+    });
+    connect(view, &NavSettingView::WriteMaximalHelm, [this]() {
+        if (device) {
+            device->Write(Command::GenerateMaximalHelmCmd(Command::sbus1, model));
+        }
+    });
+    connect(view, &NavSettingView::WriteMiddleHelm, [this]() {
+        if (device) {
+            device->Write(Command::GenerateMiddleHelmCmd(Command::sbus1, model));
+        }
+    });
+    connect(view, &NavSettingView::MapperChanged, [this](int channel, int val) { model->SetMapSlot(channel, val); });
+    connect(view, &NavSettingView::ReveseChanged, [this](int channel, bool val) { model->SetReverse(channel, val); });
+    connect(view, &NavSettingView::MinimalHelmChanged, [this](int channel, int val) { model->SetMinimalHelm(channel, val); });
+    connect(view, &NavSettingView::MiddleHeelmChanged, [this](int channel, int val) { model->SetMiddlelHelm(channel, val); });
+    connect(view, &NavSettingView::MaximalHelmChanged, [this](int channel, int val) { model->SetMaximalHelm(channel, val); });
 }
 
 QWidget* NavController::View()

@@ -12,7 +12,8 @@ public:
     bool Open() override;
     bool Close() override;
     QByteArray Read() override;
-    void Write(const unsigned char* data, int length) override;
+    bool Write(const unsigned char* data, int length) override;
+    bool Write(const QByteArray& data) override;
 
 private:
     QSerialPort* impl;

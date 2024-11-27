@@ -45,10 +45,20 @@ QByteArray QtSerialPortImpl::Read()
     }
     return {};
 }
-void QtSerialPortImpl::Write(const unsigned char* info, int length)
+bool QtSerialPortImpl::Write(const unsigned char* info, int length)
 {
     if (impl->isOpen()) {
         QByteArray data((const char*)info, length);
-        impl->write(data);
+        auto result   = impl->write((const char*)info, length);
+        return result = length;
     }
+    return false;
+}
+bool QtSerialPortImpl::Write(const QByteArray& data)
+{
+    if (impl->isOpen()) {
+        auto result = impl->write(data);
+        return result == data.size();
+    }
+    return false;
 }

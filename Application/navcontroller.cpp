@@ -40,16 +40,15 @@ void NavController::Initialize()
 
     connect(view, &NavSettingView::RequestReverse, [this]() {
         if (device) {
-            device->Write(Command::requestReverseCmd, sizeof(Command::requestReverseCmd));
+            device->Write(Command::GenerateMappSlot(1));
         }
     });
     connect(view, &NavSettingView::RequestMaximalHelm, [this]() {
         if (device) {
-            auto check = Command::Check<sizeof(Command::requestSendQueueCmd)>(Command::requestSendQueueCmd);
             device->Write(Command::requestMaximalHelmCmd, sizeof(Command::requestMaximalHelmCmd));
         }
     });
-    connect(view, &NavSettingView::RequestReverse, [this]() {
+    connect(view, &NavSettingView::RequestSendQueue, [this]() {
         if (device) {
             device->Write(Command::requestSendQueueCmd, sizeof(Command::requestSendQueueCmd));
         }

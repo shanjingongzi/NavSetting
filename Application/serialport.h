@@ -14,7 +14,8 @@ public:
     bool Open();
     bool Close();
     QByteArray Read();
-    void Write(unsigned char* byte, int lengh);
+    bool Write(unsigned char* byte, int lengh);
+    bool Write(const QByteArray& array);
 
 private:
     SerialportImpl* impl;

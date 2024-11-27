@@ -31,3 +31,13 @@ std::tuple<uint8_t, uint8_t> Command::XOR(unsigned char* prx_data, unsigned char
     }
     return {X_OR, Y_OR};
 }
+
+QByteArray Command::GenerateMappSlot(uint8_t sbus)
+{
+    QByteArray result((char*)mappSlotCmd, sizeof(mappSlotCmd));
+    auto parity               = XOR<sizeof(mappSlotCmd)>(mappSlotCmd);
+    const auto& [x_or, y_or]  = parity;
+    result[result.size() - 1] = x_or;
+    result[result.size() - 2] = y_or;
+    return result;
+}

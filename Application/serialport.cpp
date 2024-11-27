@@ -19,7 +19,11 @@ QByteArray SerialPort::Read()
 {
     return impl->Read();
 }
-void SerialPort::Write(unsigned char* byte, int length)
+bool SerialPort::Write(unsigned char* byte, int length)
 {
-    impl->Write(byte, length);
+    return impl->Write(byte, length);
+}
+bool SerialPort::Write(const QByteArray& array)
+{
+    return impl->Write(array);
 }

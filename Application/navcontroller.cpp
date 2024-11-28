@@ -53,27 +53,27 @@ void NavController::Initialize()
     });
     connect(view, &NavSettingView::WriteSignalSource, [this]() {
         if (device) {
-            device->Write(Command::GenerateMappSlotCmd(Command::sbus1, model));
+            device->Write(Command::GenerateMappSlotCmd(Command::configSerialport, model));
         }
     });
     connect(view, &NavSettingView::WriteReverse, [this]() {
         if (device) {
-            device->Write(Command::GenerateReverseCmd(Command::sbus1, model));
+            device->Write(Command::GenerateReverseCmd(Command::configSerialport, model));
         }
     });
     connect(view, &NavSettingView::WriteMinimalHelm, [this]() {
         if (device) {
-            device->Write(Command::GenerateMinimalHelmCmd(Command::sbus1, model));
+            device->Write(Command::GenerateMinimalHelmCmd(Command::configSerialport, model));
         }
     });
     connect(view, &NavSettingView::WriteMaximalHelm, [this]() {
         if (device) {
-            device->Write(Command::GenerateMaximalHelmCmd(Command::sbus1, model));
+            device->Write(Command::GenerateMaximalHelmCmd(Command::configSerialport, model));
         }
     });
     connect(view, &NavSettingView::WriteMiddleHelm, [this]() {
         if (device) {
-            device->Write(Command::GenerateMiddleHelmCmd(Command::sbus1, model));
+            device->Write(Command::GenerateMiddleHelmCmd(Command::configSerialport, model));
         }
     });
     connect(view, &NavSettingView::MapperChanged, [this](int channel, int val) { model->SetMapSlot(channel, val); });
@@ -92,11 +92,14 @@ void NavController::StartListen()
 {
     std::thread listenTask([this]() {
         while (true) {
-            std::this_thread::sleep_for(std::chrono::milliseconds(5));
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
             if (!enableListen.load(std::memory_order_relaxed)) {
                 break;
             }
-            auto msg = device->Read().toHex(' ');
+            auto msg = device->Read();
+            for (auto& iter : msg) {
+                iter = ~iter;
+            }
             emit MessageChanged(msg);
             qDebug() << msg;
         }

@@ -53,6 +53,7 @@ void NavSettingView::Initialize()
     InitializeChannelPanel();
     InitializeAdSettingPanel();
     InitializeBottomBar();
+    Connect();
 }
 void NavSettingView::InitializeTopBar()
 {
@@ -266,11 +267,14 @@ void NavSettingView::Connect()
 {
     for (int i = 0; i < channelItems.size(); ++i) {
         auto iter = channelItems[i];
-        connect(iter.mapper, &QComboBox::currentIndexChanged, [i, this](int slot) { emit MapperChanged(i + 1, slot); });
+        connect(iter.mapper, &QComboBox::currentIndexChanged, [i, this](int slot) {
+            emit MapperChanged(i, slot);
+            qDebug() << "";
+        });
     }
     for (int i = 0; i < adSettingItems.size(); ++i) {
         auto iter = adSettingItems[i];
-        connect(iter.reverse, &QCheckBox::stateChanged, [i, this](Qt::CheckState state) { emit ReveseChanged(i, state == Qt::Checked ? true : false); });
+        // connect(iter.reverse, &QCheckBox::stateChanged, [i, this](Qt::CheckState state) { emit ReveseChanged(i, state == Qt::Checked ? true : false); });
         connect(iter.minHelm, &QSpinBox::valueChanged, [i, this](int val) { emit MinimalHelmChanged(i, val); });
         connect(iter.midHelm, &QSpinBox::valueChanged, [i, this](int val) { emit MiddleHeelmChanged(i, val); });
         connect(iter.maxHelm, &QSpinBox::valueChanged, [i, this](int val) { emit MaximalHelmChanged(i, val); });

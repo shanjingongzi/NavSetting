@@ -270,7 +270,7 @@ void NavSettingView::Connect()
     }
     for (int i = 0; i < adSettingItems.size(); ++i) {
         auto iter = adSettingItems[i];
-        connect(iter.reverse, &QCheckBox::checkStateChanged, [i, this](Qt::CheckState state) { emit ReveseChanged(i, state == Qt::Checked ? true : false); });
+        connect(iter.reverse, &QCheckBox::stateChanged, [i, this](Qt::CheckState state) { emit ReveseChanged(i, state == Qt::Checked ? true : false); });
         connect(iter.minHelm, &QSpinBox::valueChanged, [i, this](int val) { emit MinimalHelmChanged(i, val); });
         connect(iter.midHelm, &QSpinBox::valueChanged, [i, this](int val) { emit MiddleHeelmChanged(i, val); });
         connect(iter.maxHelm, &QSpinBox::valueChanged, [i, this](int val) { emit MaximalHelmChanged(i, val); });

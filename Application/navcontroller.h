@@ -7,6 +7,7 @@
 #include "navsettingmodel.h"
 #include "navsettingview.h"
 #include "serialport.h"
+#include <map>
 
 class NavController : public QObject
 {
@@ -17,15 +18,24 @@ public:
     QWidget* View();
     void StartListen();
     void StopListen();
-    signals:
-    void MessageChanged(const QString &msg);
+    inline NavSettingModel* Model()
+    {
+        auto iter = models.find(currentIndex);
+        assert(iter != models.end());
+        return iter->second;
+    }
+    void ParseRespond(const QByteArray& data);
+    
+signals:
+    void MessageChanged(const QString& msg);
 
 private:
     NavSettingView* view;
-    NavSettingModel* model;
     SerialPort* device = nullptr;
     int channelNum     = 16;
     std::atomic<bool> enableListen;
+    uint8_t currentIndex = 1;
+    std::map<uint8_t, NavSettingModel*> models;
 };
 
 #endif   // NAVCONTROLLER_H

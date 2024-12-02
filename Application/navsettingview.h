@@ -4,12 +4,14 @@
 #include <QVBoxLayout>
 #include <QVector>
 #include <QWidget>
+#include <map>
 #include <qcheckbox.h>
 #include <qcombobox.h>
 #include <qprogressbar.h>
 #include <qspinbox.h>
 #include <qtmetamacros.h>
 #include <qwidget.h>
+
 
 
 class NavSettingView : public QWidget
@@ -46,6 +48,7 @@ signals:
     void WriteMinimalHelm();
     void WriteMaximalHelm();
     void WriteMiddleHelm();
+    void sbusChanged(int index);
 
 private:
     struct ChannelItem
@@ -67,6 +70,8 @@ private:
     int channelNum = 16;
     QVector<ChannelItem> channelItems;
     QVector<AdSettingItem> adSettingItems;
+    std::map<int, NavSettingModel*> models;
+    int currentIndex = 0;
 };
 
 #endif   // NAVSETTINGVIEW_H

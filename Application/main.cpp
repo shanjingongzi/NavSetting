@@ -8,7 +8,7 @@ int main(int argc, char* argv[])
     QApplication a(argc, argv);
     MainWindow w;
     w.show();
-    QFile file("./styles/styles.qss");
+    QFile file("E:/Code/NavSetting/build/bin/Debug/styles/styles.qss");
     if (file.open(QFile::ReadOnly)) {
         QString stypeSheet = QString::fromUtf8(file.readAll());
         a.setStyleSheet(stypeSheet);

@@ -142,6 +142,7 @@ void NavSettingView::InitializeChannelPanel()
 
     QWidget* sbusWidget1 = new QWidget(this);
     QWidget* sbusWidget2 = new QWidget(this);
+    QWidget* sbusWidget3 = new QWidget(this);
 
     auto InitFunc = [this](QWidget* widget) {
         QVBoxLayout* page1Layout     = new QVBoxLayout();
@@ -177,8 +178,11 @@ void NavSettingView::InitializeChannelPanel()
     };
     InitFunc(sbusWidget1);
     InitFunc(sbusWidget2);
+    InitFunc(sbusWidget3);
     container->addTab(sbusWidget1, tr("sbus1"));
     container->addTab(sbusWidget2, tr("sbus2"));
+    container->addTab(sbusWidget3, tr("sbus3"));
+    connect(container, &QTabWidget::currentChanged, [this](int index) { emit sbusChanged(index); });
 }
 
 void NavSettingView::InitializeAdSettingPanel()

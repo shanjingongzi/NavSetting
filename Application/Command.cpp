@@ -1,10 +1,12 @@
 #include "Command.h"
 #include "navsettingmodel.h"
+#include <cstdint>
+#include <cstring>
 #include <qdir.h>
 #include <qstringview.h>
 #include <tuple>
 
-std::tuple<uint8_t, uint8_t> Command::XOR(unsigned char* prx_data, unsigned char len)
+std::tuple<uint8_t, uint8_t> Command::XOR(const unsigned char* prx_data, unsigned char len)
 {
     unsigned char X_OR, Y_OR;
     uint8_t i, a, b, c, d;
@@ -99,4 +101,81 @@ QByteArray Command::GenerateMaximalHelmCmd(uint8_t sbus, NavSettingModel* model)
     }
     ParityCmd(result);
     return result;
+}
+
+uint8_t* Command::GenerateRequestSignalSourceCmd(uint8_t sbus)
+{
+    auto result = new uint8_t[sizeof(read_template)];
+    memcpy(result, read_template, 6);
+    result[cmdBit] = signalSource;
+    result[ctrBit] = sbus;
+    auto parity    = XOR(result + 2, 2);
+    result[4]      = std::get<0>(parity);
+    result[5]      = std::get<1>(parity);
+    return result;
+}
+uint8_t* Command::GenerateRequestReverseCmd(uint8_t sbus)
+{
+    auto result = new uint8_t[sizeof(read_template)];
+    memcpy(result, read_template, 6);
+    result[cmdBit] = reverse;
+    result[ctrBit] = sbus;
+    auto parity    = XOR(result + 2, 2);
+    result[4]      = std::get<0>(parity);
+    result[5]      = std::get<1>(parity);
+    return result;
+}
+
+uint8_t* Command::GenerateRequestMinimalHelm(uint8_t sbus)
+{
+    auto result = new uint8_t[sizeof(read_template)];
+    memcpy(result, read_template, 6);
+    result[cmdBit] = minimalHelm;
+    result[ctrBit] = sbus;
+    auto parity    = XOR(result + 2, 2);
+    result[4]      = std::get<0>(parity);
+    result[5]      = std::get<1>(parity);
+    return result;
+}
+
+uint8_t* Command::GenerateRequestMaximalHelm(uint8_t sbus)
+{
+    auto result = new uint8_t[sizeof(read_template)];
+    memcpy(result, read_template, 6);
+    result[cmdBit] = maximalHelm;
+    result[ctrBit] = sbus;
+    auto parity    = XOR(result + 2, 2);
+    result[4]      = std::get<0>(parity);
+    result[5]      = std::get<1>(parity);
+    return result;
+}
+
+uint8_t* Command::GenerateRequestFineTune(uint8_t sbus)
+{
+    auto result = new uint8_t[sizeof(read_template)];
+    memcpy(result, read_template, 6);
+    result[cmdBit] = fineTune;
+    result[ctrBit] = sbus;
+    auto parity    = XOR(result + 2, 2);
+    result[4]      = std::get<0>(parity);
+    result[5]      = std::get<1>(parity);
+    return result;
+}
+
+bool Command::ParityRespond(const QByteArray& data)
+{
+    if (data.size() < 38) {
+        return false;
+    }
+    int a = (uchar)data[0];
+    int b = (uchar)data[1];
+	if ((uchar)data[0] != 0x55 || (uchar)data[1] != 0xAA) {
+		return false;
+	}
+    const unsigned char* ptr = (unsigned char*)data.data() + 2;
+    auto parity     = XOR((const unsigned char*)(ptr), 38 - 4);
+    uint8_t x_or    = std::get<0>(parity);
+    uint8_t y_or    = std::get<1>(parity);
+    return true;
+    return data[data.size() - 1] == y_or && data[data.size() - 2] == x_or;
 }

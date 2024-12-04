@@ -98,18 +98,32 @@ void NavSettingView::InitializeDebug()
     QHBoxLayout* itemLayout = new QHBoxLayout();
     itemLayout->setAlignment(Qt::AlignRight);
     layout->addLayout(itemLayout);
+
     QPushButton* button = new QPushButton(this);
+    connect(button, &QPushButton::clicked, [this]() { emit RequestSignalSource(); });
+    button->setText("request signal source");
+    itemLayout->addWidget(button);
+
+    button = new QPushButton(this);
     connect(button, &QPushButton::clicked, [this]() { emit RequestReverse(); });
     button->setText("request reverse");
     itemLayout->addWidget(button);
+
+    button = new QPushButton(this);
+    connect(button, &QPushButton::clicked, [this]() { emit RequestMinimalHelm(); });
+    button->setText("request minimal helm");
+    itemLayout->addWidget(button);
+
+    button = new QPushButton(this);
+    connect(button, &QPushButton::clicked, [this]() { emit RequestFineTune(); });
+    button->setText("request  fine tune");
+    itemLayout->addWidget(button);
+
     button = new QPushButton(this);
     connect(button, &QPushButton::clicked, [this]() { emit RequestMaximalHelm(); });
     button->setText("request maximal helm");
     itemLayout->addWidget(button);
-    button = new QPushButton(this);
-    connect(button, &QPushButton::clicked, [this]() { emit RequestSendQueue(); });
-    button->setText("request send queue");
-    itemLayout->addWidget(button);
+
     button = new QPushButton(this);
     connect(button, &QPushButton::clicked, [this]() { emit WriteSignalSource(); });
     button->setText("write signal source");
@@ -287,9 +301,14 @@ void NavSettingView::Connect()
 
 void NavSettingView::SetModel(NavSettingModel* model)
 {
-    for (auto iter : channelItems) {}
-    for (int i = 0; i < adSettingItems.size(); ++i) {
+    for (int i = 0; i < channelNum; ++i) {
+        auto iter = channelItems[i];
+        SignalLock lock(iter.mapper);
+        iter.mapper->setCurrentIndex(model->GetMapSlot(i));
+    }
+    for (int i = 0; i < channelNum; ++i) {
         auto& iter = adSettingItems[i];
+        SignalLock lock1(iter.reverse), lock2(iter.minHelm), lock3(iter.maxHelm), lock4(iter.midHelm);
         iter.reverse->setCheckState(model->GetReverse(i) ? Qt::Checked : Qt::Unchecked);
         iter.minHelm->setValue(model->GetMinimalHelm(i));
         iter.maxHelm->setValue(model->GetMaximalHelm(i));

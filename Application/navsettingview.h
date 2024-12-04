@@ -7,12 +7,23 @@
 #include <map>
 #include <qcheckbox.h>
 #include <qcombobox.h>
+#include <qobject.h>
 #include <qprogressbar.h>
 #include <qspinbox.h>
 #include <qtmetamacros.h>
 #include <qwidget.h>
 
 
+struct SignalLock
+{
+    SignalLock(QObject* obj)
+        : obj{obj}
+    {
+        obj->blockSignals(true);
+    }
+    ~SignalLock() { obj->blockSignals(false); }
+    QObject* obj;
+};
 
 class NavSettingView : public QWidget
 {
@@ -40,9 +51,14 @@ signals:
     void MiddleHeelmChanged(int channel, int val);
     void MaximalHelmChanged(int channel, int val);
     void StopListen();
+
+    void RequestSignalSource();
     void RequestReverse();
+    void RequestMinimalHelm();
     void RequestMaximalHelm();
-    void RequestSendQueue();
+    void RequestFineTune();
+
+
     void WriteSignalSource();
     void WriteReverse();
     void WriteMinimalHelm();

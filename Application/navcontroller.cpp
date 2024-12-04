@@ -41,23 +41,35 @@ void NavController::Initialize()
     });
     connect(view, &NavSettingView::StopListen, [this]() { this->StopListen(); });
 
+    connect(view, &NavSettingView::RequestSignalSource, [this]() {
+        if (device) {
+            device->Write(Command::GenerateRequestSignalSourceCmd(currentIndex), 6);
+        }
+    });
+
     connect(view, &NavSettingView::RequestReverse, [this]() {
         if (device) {
             device->Write(Command::GenerateRequestReverseCmd(currentIndex), 6);
         }
     });
+    connect(view, &NavSettingView::RequestMinimalHelm, [this]() {
+        if (device) {
+            device->Write(Command::GenerateRequestMinimalHelm(currentIndex), 6);
+        }
+    });
+
     connect(view, &NavSettingView::RequestMaximalHelm, [this]() {
         if (device) {
             device->Write(Command::GenerateRequestMaximalHelm(currentIndex), 6);
         }
     });
-    connect(view, &NavSettingView::RequestSendQueue, [this]() {
+
+    connect(view, &NavSettingView::RequestFineTune, [this]() {
         if (device) {
-            unsigned char msg[] = {0xAA, 0x00, 0x01, 0x01, 0x03, 0x00};
-            // device->Write(msg, 6);
-            device->Write(Command::GenerateRequestSignalSourceCmd(currentIndex), 6);
+            device->Write(Command::GenerateRequestFineTune(currentIndex), 6);
         }
     });
+
     connect(view, &NavSettingView::WriteSignalSource, [this]() {
         if (device) {
             device->Write(Command::GenerateMappSlotCmd(Command::configSerialport, Model()));
@@ -105,14 +117,14 @@ void NavController::StartListen()
                 break;
             }
             auto msg = device->Read();
-            if (msg.size()>=38) {
+            if (msg.size() >= 38) {
                 msg.resize(38);
-				if (Command::ParityRespond(msg)) {
+                if (Command::ParityRespond(msg)) {
                     ParseRespond(msg);
-					msg = msg.toHex(' ');
-					emit MessageChanged(msg);
-				}
-				qDebug() << msg;
+                    msg = msg.toHex(' ');
+                    emit MessageChanged(msg);
+                }
+                qDebug() << msg;
                 qDebug() << msg.size();
             }
         }
@@ -132,23 +144,23 @@ void NavController::ParseRespond(const QByteArray& data)
         return;
     }
     uint8_t cmdBit, ctrBit;
-    cmdBit = (unsigned char)data[Command::cmdBit];
-    ctrBit = (unsigned char)data[Command::ctrBit];
+    cmdBit     = (unsigned char)data[Command::cmdBit];
+    ctrBit     = (unsigned char)data[Command::ctrBit];
     auto model = models.find(ctrBit);
     if (model == models.end()) {
         return;
     }
-	const unsigned char* ptr = (unsigned char*)(data.data()+Command::dataBit);
+    const unsigned char* ptr = (unsigned char*)(data.data() + Command::dataBit);
 
     auto parseValue = [&ptr]() {
-		unsigned short val = 0x0000;
-		unsigned char low = *ptr++;
-		unsigned char high = *ptr++;
-		val |= high;
-		val=val << 8;
-		val |= low;
+        unsigned short val = 0x0000;
+        unsigned char low  = *ptr++;
+        unsigned char high = *ptr++;
+        val |= high;
+        val = val << 8;
+        val |= low;
         return val;
-	};
+    };
 
     switch (cmdBit) {
     case Command::signalSource:
@@ -161,7 +173,7 @@ void NavController::ParseRespond(const QByteArray& data)
         for (int i = 0; i < channelNum; ++i) {
             auto val = parseValue();
             model->second->SetReverse(i, val);
-        } 
+        }
         break;
     case Command::minimalHelm:
         for (int i = 0; i < channelNum; ++i) {
@@ -181,5 +193,7 @@ void NavController::ParseRespond(const QByteArray& data)
             model->second->SetMiddlelHelm(i, val);
         }
         break;
-	}
+    }
+
+    view->SetModel(model->second);
 }

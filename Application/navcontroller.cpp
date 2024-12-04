@@ -72,27 +72,27 @@ void NavController::Initialize()
 
     connect(view, &NavSettingView::WriteSignalSource, [this]() {
         if (device) {
-            device->Write(Command::GenerateMappSlotCmd(Command::configSerialport, Model()));
+            device->Write(Command::GenerateMappSlotCmd(currentIndex, Model()));
         }
     });
     connect(view, &NavSettingView::WriteReverse, [this]() {
         if (device) {
-            device->Write(Command::GenerateReverseCmd(Command::configSerialport, Model()));
+            device->Write(Command::GenerateReverseCmd(currentIndex, Model()));
         }
     });
     connect(view, &NavSettingView::WriteMinimalHelm, [this]() {
         if (device) {
-            device->Write(Command::GenerateMinimalHelmCmd(Command::configSerialport, Model()));
+            device->Write(Command::GenerateMinimalHelmCmd(currentIndex, Model()));
         }
     });
     connect(view, &NavSettingView::WriteMaximalHelm, [this]() {
         if (device) {
-            device->Write(Command::GenerateMaximalHelmCmd(Command::configSerialport, Model()));
+            device->Write(Command::GenerateMaximalHelmCmd(currentIndex, Model()));
         }
     });
     connect(view, &NavSettingView::WriteMiddleHelm, [this]() {
         if (device) {
-            device->Write(Command::GenerateMiddleHelmCmd(Command::configSerialport, Model()));
+            device->Write(Command::GenerateMiddleHelmCmd(currentIndex, Model()));
         }
     });
     connect(view, &NavSettingView::MapperChanged, [this](int channel, int val) { Model()->SetMapSlot(channel, val); });
@@ -152,11 +152,21 @@ void NavController::ParseRespond(const QByteArray& data)
     }
     const unsigned char* ptr = (unsigned char*)(data.data() + Command::dataBit);
 
-    auto parseValue = [&ptr]() {
+    auto parseUnsignedValue = [&ptr]()->unsigned short {
         unsigned short val = 0x0000;
         unsigned char low  = *ptr++;
-        unsigned char high = *ptr++;
-        val |= high;
+		unsigned char high = *ptr++;
+		val |= high;
+        val = val << 8;
+        val |= low;
+        return val;
+    };
+
+    auto parseValue = [&ptr]()->short {
+        short val = 0x0000;
+        unsigned char low  = *ptr++;
+		char high = *(char*)ptr++;
+		val |= high;
         val = val << 8;
         val |= low;
         return val;
@@ -165,25 +175,25 @@ void NavController::ParseRespond(const QByteArray& data)
     switch (cmdBit) {
     case Command::signalSource:
         for (int i = 0; i < channelNum; ++i) {
-            auto val = parseValue();
+            auto val = parseUnsignedValue();
             model->second->SetMapSlot(i, val);
         }
         break;
     case Command::reverse:
         for (int i = 0; i < channelNum; ++i) {
-            auto val = parseValue();
+            auto val = parseUnsignedValue();
             model->second->SetReverse(i, val);
         }
         break;
     case Command::minimalHelm:
         for (int i = 0; i < channelNum; ++i) {
-            auto val = parseValue();
+            auto val = parseUnsignedValue();
             model->second->SetMinimalHelm(i, val);
         }
         break;
     case Command::maximalHelm:
         for (int i = 0; i < channelNum; ++i) {
-            auto val = parseValue();
+            auto val = parseUnsignedValue();
             model->second->SetMaximalHelm(i, val);
         }
         break;
@@ -194,6 +204,5 @@ void NavController::ParseRespond(const QByteArray& data)
         }
         break;
     }
-
-    view->SetModel(model->second);
+	view->SetModel(model->second);
 }

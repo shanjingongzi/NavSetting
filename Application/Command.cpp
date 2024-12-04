@@ -57,7 +57,8 @@ QByteArray Command::GenerateMappSlotCmd(uint8_t sbus, NavSettingModel* model)
 {
     QByteArray result = GenericWriteCmd(signalSource, sbus);
     for (int i = 0; i < model->Size(); ++i) {
-        result[dataBit + i] = model->GetMapSlot(i);
+        int index     = dataBit + i * 2;
+        result[index] = model->GetMapSlot(i);
     }
     ParityCmd(result);
     return result;
@@ -67,7 +68,8 @@ QByteArray Command::GenerateReverseCmd(uint8_t sbus, NavSettingModel* model)
 {
     QByteArray result = GenericWriteCmd(reverse, sbus);
     for (int i = 0; i < model->Size(); ++i) {
-        result[dataBit + i] = (unsigned char)model->GetReverse(i);
+        int index     = dataBit + i * 2;
+        result[index] = (unsigned char)model->GetReverse(i);
     }
     ParityCmd(result);
     return result;
@@ -77,7 +79,12 @@ QByteArray Command::GenerateMinimalHelmCmd(uint8_t sbus, NavSettingModel* model)
 {
     QByteArray result = GenericWriteCmd(minimalHelm, sbus);
     for (int i = 0; i < model->Size(); ++i) {
-        result[dataBit + i] = (model->GetMinimalHelm(i));
+        int index     = dataBit + i * 2;
+        unsigned short val = model->GetMinimalHelm(i);
+        uint8_t low = (uint8_t)val;
+        uint8_t high = (uint8_t)(val >> 8);
+        result[index] = low;
+        result[index + 1] = high;
     }
     ParityCmd(result);
     return result;
@@ -87,7 +94,12 @@ QByteArray Command::GenerateMiddleHelmCmd(uint8_t sbus, NavSettingModel* model)
 {
     QByteArray result = GenericWriteCmd(fineTune, sbus);
     for (int i = 0; i < model->Size(); ++i) {
-        result[dataBit + i] = (model->GetMiddleHelm(i));
+        int index     = dataBit + i * 2;
+        short val = model->GetMiddleHelm(i);
+        uint8_t low = (uint8_t)val;
+        char high = (char)(val >> 8);
+        result[index] = (low);
+        result[index+1] = (high);
     }
     ParityCmd(result);
     return result;
@@ -97,7 +109,12 @@ QByteArray Command::GenerateMaximalHelmCmd(uint8_t sbus, NavSettingModel* model)
 {
     QByteArray result = GenericWriteCmd(maximalHelm, sbus);
     for (int i = 0; i < model->Size(); ++i) {
-        result[dataBit + i] = (model->GetMaximalHelm(i));
+        int index     = dataBit + i * 2;
+        unsigned short val = model->GetMaximalHelm(i);
+        uint8_t low = (uint8_t)val;
+        uint8_t high = (uint8_t)(val >> 8);
+        result[index] = low;
+        result[index + 1] = high;
     }
     ParityCmd(result);
     return result;
@@ -169,13 +186,13 @@ bool Command::ParityRespond(const QByteArray& data)
     }
     int a = (uchar)data[0];
     int b = (uchar)data[1];
-	if ((uchar)data[0] != 0x55 || (uchar)data[1] != 0xAA) {
-		return false;
-	}
+    if ((uchar)data[0] != 0x55 || (uchar)data[1] != 0xAA) {
+        return false;
+    }
     const unsigned char* ptr = (unsigned char*)data.data() + 2;
-    auto parity     = XOR((const unsigned char*)(ptr), 38 - 4);
-    uint8_t x_or    = std::get<0>(parity);
-    uint8_t y_or    = std::get<1>(parity);
+    auto parity              = XOR((const unsigned char*)(ptr), 38 - 4);
+    uint8_t x_or             = std::get<0>(parity);
+    uint8_t y_or             = std::get<1>(parity);
     return true;
     return data[data.size() - 1] == y_or && data[data.size() - 2] == x_or;
 }

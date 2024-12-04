@@ -213,10 +213,13 @@ void NavSettingView::InitializeAdSettingPanel()
         QCheckBox* reverseChkBox = new QCheckBox();
         itemLayout->addWidget(reverseChkBox);
         QSpinBox* min = new QSpinBox(this);
+        min->setRange(0, 2047);
         itemLayout->addWidget(min);
         QSpinBox* mid = new QSpinBox(this);
+        mid->setRange(-2047, 2047);
         itemLayout->addWidget(mid);
         QSpinBox* max = new QSpinBox(this);
+        max->setRange(0, 2047);
         itemLayout->addWidget(max);
         adSettingItems.push_back({reverseChkBox, min, mid, max});
     };
@@ -292,7 +295,7 @@ void NavSettingView::Connect()
     }
     for (int i = 0; i < adSettingItems.size(); ++i) {
         auto iter = adSettingItems[i];
-        // connect(iter.reverse, &QCheckBox::stateChanged, [i, this](Qt::CheckState state) { emit ReveseChanged(i, state == Qt::Checked ? true : false); });
+        connect(iter.reverse, &QCheckBox::stateChanged, [i, this](int state) { emit ReveseChanged(i, state == Qt::Checked ? true : false); });
         connect(iter.minHelm, &QSpinBox::valueChanged, [i, this](int val) { emit MinimalHelmChanged(i, val); });
         connect(iter.midHelm, &QSpinBox::valueChanged, [i, this](int val) { emit MiddleHeelmChanged(i, val); });
         connect(iter.maxHelm, &QSpinBox::valueChanged, [i, this](int val) { emit MaximalHelmChanged(i, val); });

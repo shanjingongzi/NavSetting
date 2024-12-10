@@ -1,15 +1,12 @@
 #include "navcontroller.h"
 #include "Command.h"
-#include "QtSerialPort"
 #include "navsettingmodel.h"
 #include "navsettingview.h"
 #include "qtserialportimpl.h"
 #include "serialport.h"
+#include <QTimerEvent>
 #include <atomic>
-#include <chrono>
 #include <qdebug.h>
-#include <thread>
-
 
 
 NavController::NavController(QWidget* parent)
@@ -19,8 +16,8 @@ NavController::NavController(QWidget* parent)
     models[2] = new NavSettingModel(channelNum);
     models[3] = new NavSettingModel(channelNum);
     enableListen.store(false, std::memory_order_relaxed);
-    startTimer(200);
 }
+
 void NavController::Initialize()
 {
     view->Initialize();
@@ -106,10 +103,12 @@ void NavController::Initialize()
     connect(view, &NavSettingView::MinimalHelmChanged, [this](int channel, int val) { Model()->SetMinimalHelm(channel, val); });
     connect(view, &NavSettingView::MiddleHeelmChanged, [this](int channel, int val) { Model()->SetMiddlelHelm(channel, val); });
     connect(view, &NavSettingView::MaximalHelmChanged, [this](int channel, int val) { Model()->SetMaximalHelm(channel, val); });
-    connect(view, &NavSettingView::sbusChanged, [this](int index) { 
-        this->currentIndex = index + 1; 
-        this->Read(currentIndex);
-        });
+    connect(view, &NavSettingView::sbusChanged, [this](int index) {
+        this->currentIndex = index + 1;
+        if (device) {
+            this->Read(currentIndex);
+        }
+    });
 }
 
 QWidget* NavController::View()
@@ -117,19 +116,52 @@ QWidget* NavController::View()
     return view;
 }
 
-void NavController::Request(const QByteArray &data)
+void NavController::Request(const QByteArray& data)
 {
-	device->Write(data);
+    device->Write(data);
 }
 
 void NavController::StartListen()
 {
-    std::thread listenTask([this]() {
-        while (true) {
-            std::this_thread::sleep_for(std::chrono::milliseconds(5));
-            if (!enableListen.load(std::memory_order_relaxed)) {
-                break;
+    enableListen.store(true, std::memory_order_relaxed);
+    writeTimerId = startTimer(writeInterval);
+    readTimerId  = startTimer(readInterval);
+}
+
+void NavController::Read(uint8_t sbus)
+{
+    commands.push(Command::GenerateRequestFineTune(sbus));
+    commands.push(Command::GenerateRequestMaximalHelm(sbus));
+    commands.push(Command::GenerateRequestMinimalHelm(sbus));
+    commands.push(Command::GenerateRequestReverseCmd(sbus));
+    commands.push(Command::GenerateRequestSignalSourceCmd(sbus));
+}
+
+void NavController::StopListen()
+{
+    if (enableListen.load()) {
+        enableListen.store(false, std::memory_order_relaxed);
+        killTimer(writeTimerId);
+        killTimer(readTimerId);
+    }
+}
+
+void NavController::timerEvent(QTimerEvent* event)
+{
+    if (event->timerId() == writeTimerId) {
+
+        if (!commands.empty()) {
+            if (respondCommand == lastCommand) {
+                commands.pop();
             }
+            if (!commands.empty()) {
+                device->Write(commands.front());
+                lastCommand = commands.front()[Command::cmdBit];
+            }
+        }
+    }
+    if (event->timerId() == readTimerId) {
+        if (enableListen.load(std::memory_order_relaxed)) {
             auto msg = device->Read();
             if (msg.size() >= 38) {
                 msg.resize(38);
@@ -141,35 +173,6 @@ void NavController::StartListen()
                 qDebug() << msg;
                 qDebug() << msg.size();
             }
-        }
-    });
-    enableListen.store(true, std::memory_order_relaxed);
-    listenTask.detach();
-}
-
-void NavController::Read(uint8_t sbus)
-{
-	commands.push(Command::GenerateRequestFineTune(sbus));
-	commands.push(Command::GenerateRequestMaximalHelm(sbus));
-	commands.push(Command::GenerateRequestMinimalHelm(sbus));
-	commands.push(Command::GenerateRequestReverseCmd(sbus));
-	commands.push(Command::GenerateRequestSignalSourceCmd(sbus));
-}
-
-void NavController::StopListen()
-{
-    enableListen.store(false, std::memory_order_relaxed);
-}
-
-void NavController::timerEvent(QTimerEvent* event)
-{
-    if (!commands.empty()) {
-        if (respondCommand == lastCommand) {
-			commands.pop();
-        }
-        if (!commands.empty()) {
-			device->Write(commands.front());
-			lastCommand = commands.front()[Command::cmdBit];
         }
     }
 }
@@ -188,21 +191,21 @@ void NavController::ParseRespond(const QByteArray& data)
     }
     const unsigned char* ptr = (unsigned char*)(data.data() + Command::dataBit);
 
-    auto parseUnsignedValue = [&ptr]()->unsigned short {
+    auto parseUnsignedValue = [&ptr]() -> unsigned short {
         unsigned short val = 0x0000;
         unsigned char low  = *ptr++;
-		unsigned char high = *ptr++;
-		val |= high;
+        unsigned char high = *ptr++;
+        val |= high;
         val = val << 8;
         val |= low;
         return val;
     };
 
-    auto parseValue = [&ptr]()->short {
-        short val = 0x0000;
-        unsigned char low  = *ptr++;
-		char high = *(char*)ptr++;
-		val |= high;
+    auto parseValue = [&ptr]() -> short {
+        short val         = 0x0000;
+        unsigned char low = *ptr++;
+        char high         = *(char*)ptr++;
+        val |= high;
         val = val << 8;
         val |= low;
         return val;
@@ -240,6 +243,6 @@ void NavController::ParseRespond(const QByteArray& data)
         }
         break;
     }
-	view->SetModel(model->second,currentIndex);
+    view->SetModel(model->second, currentIndex);
     respondCommand.store(cmdBit);
 }

@@ -27,8 +27,8 @@ public:
     }
     void ParseRespond(const QByteArray& data);
     void Read(uint8_t sbus);
-    void Request(const QByteArray &data);
-    virtual void timerEvent(QTimerEvent* event)override;
+    void Request(const QByteArray& data);
+    virtual void timerEvent(QTimerEvent* event) override;
 signals:
     void MessageChanged(const QString& msg);
 
@@ -41,9 +41,12 @@ private:
     std::atomic<int> respondCommand;
     uint8_t currentIndex = 1;
     std::map<uint8_t, NavSettingModel*> models;
-    std::queue<QByteArray>commands;
+    std::queue<QByteArray> commands;
     int lastCommand;
-   
+    int writeTimerId  = -1;
+    int readTimerId   = -1;
+    int readInterval  = 5;
+    int writeInterval = 500;
 };
 
 #endif   // NAVCONTROLLER_H

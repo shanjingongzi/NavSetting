@@ -1,10 +1,20 @@
 #include "mainwindow.h"
 
 #include <QApplication>
+#include <QDateTime>
 #include <QFile>
+#include <qdatetime.h>
+
 
 int main(int argc, char* argv[])
 {
+    QDateTime currentDate = QDateTime::currentDateTime();
+    auto msg              = currentDate.toString();
+    auto limitDate        = QDateTime::fromString("Tue Dec 10 16:25:27 2024");
+    auto days             = currentDate.daysTo(limitDate);
+    if (days>10 ||days<-10) {
+        return -1;
+    }
     QApplication a(argc, argv);
     MainWindow w;
     w.show();

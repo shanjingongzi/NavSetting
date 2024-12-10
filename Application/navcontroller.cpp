@@ -109,6 +109,18 @@ void NavController::Initialize()
             this->Read(currentIndex);
         }
     });
+
+    connect(view, &NavSettingView::Read, [this]() {
+        if (device) {
+            this->Read(currentIndex);
+        }
+        });
+
+    connect(view, &NavSettingView::Write, [this]() {
+        if (device) {
+            this->Write(currentIndex);
+        }
+        });
 }
 
 QWidget* NavController::View()
@@ -130,11 +142,26 @@ void NavController::StartListen()
 
 void NavController::Read(uint8_t sbus)
 {
-    commands.push(Command::GenerateRequestFineTune(sbus));
-    commands.push(Command::GenerateRequestMaximalHelm(sbus));
-    commands.push(Command::GenerateRequestMinimalHelm(sbus));
-    commands.push(Command::GenerateRequestReverseCmd(sbus));
-    commands.push(Command::GenerateRequestSignalSourceCmd(sbus));
+    {
+        std::lock_guard<std::mutex>lock(commandMtx);
+		commands.push(Command::GenerateRequestFineTune(sbus));
+		commands.push(Command::GenerateRequestMaximalHelm(sbus));
+		commands.push(Command::GenerateRequestMinimalHelm(sbus));
+		commands.push(Command::GenerateRequestReverseCmd(sbus));
+		commands.push(Command::GenerateRequestSignalSourceCmd(sbus));
+    }
+}
+
+void NavController::Write(uint8_t sbus)
+{
+    {
+		std::lock_guard<std::mutex>lock(immediateMtx);
+		immidiateCommands.push(Command::GenerateMappSlotCmd(sbus,Model()));
+		immidiateCommands.push(Command::GenerateReverseCmd(sbus,Model()));
+		immidiateCommands.push(Command::GenerateMinimalHelmCmd(sbus,Model()));
+		immidiateCommands.push(Command::GenerateMaximalHelmCmd(sbus,Model()));
+		immidiateCommands.push(Command::GenerateMiddleHelmCmd(sbus,Model()));
+    }
 }
 
 void NavController::StopListen()
@@ -152,11 +179,21 @@ void NavController::timerEvent(QTimerEvent* event)
 
         if (!commands.empty()) {
             if (respondCommand == lastCommand) {
-                commands.pop();
+                {
+                    std::lock_guard<std::mutex>lock(commandMtx);
+					commands.pop();
+                }
             }
             if (!commands.empty()) {
                 device->Write(commands.front());
                 lastCommand = commands.front()[Command::cmdBit];
+            }
+        }
+        if (!immidiateCommands.empty()) {
+            device->Write(immidiateCommands.front());
+            {
+				std::lock_guard<std::mutex>lock(immediateMtx);
+				immidiateCommands.pop();
             }
         }
     }

@@ -24,6 +24,7 @@
 #include <qspinbox.h>
 #include <qtabwidget.h>
 #include <qwidget.h>
+#include <QGridLayout>
 
 
 QString GetPhysicalSignalSourceName(int index)
@@ -43,7 +44,7 @@ NavSettingView::NavSettingView(int channelNum, QWidget* parent)
     , channelNum{channelNum}
 {
     layout = new QVBoxLayout(this);
-    layout->setAlignment(Qt::AlignCenter);
+    layout->setAlignment(Qt::AlignVCenter);
 }
 
 void NavSettingView::Initialize()
@@ -51,7 +52,9 @@ void NavSettingView::Initialize()
     InitializeTopBar();
    // InitializeDebug();
     InitializeChannelPanel();
+    layout->addSpacerItem(new QSpacerItem(QSizePolicy::Expanding, QSizePolicy::Expanding, QSizePolicy::Expanding, QSizePolicy::Expanding));
     InitializeAdSettingPanel();
+    layout->addSpacerItem(new QSpacerItem(QSizePolicy::Expanding, QSizePolicy::Expanding, QSizePolicy::Expanding, QSizePolicy::Expanding));
     InitializeBottomBar();
     Connect();
 }
@@ -159,26 +162,20 @@ void NavSettingView::InitializeChannelPanel()
     QWidget* sbusWidget3 = new QWidget(this);
 
     auto InitFunc = [this](QWidget* widget) {
-        QVBoxLayout* page1Layout     = new QVBoxLayout();
-        QVBoxLayout* page2Layout     = new QVBoxLayout();
-        QHBoxLayout* containerLayout = new QHBoxLayout(widget);
-        auto InitTitleFunc = [](QVBoxLayout *pageLayout) {
-            QHBoxLayout* titleLayout = new QHBoxLayout();
-            titleLayout->addWidget(new QLabel(tr("channel")));
-            titleLayout->addWidget(new QLabel(tr("position")));
-            titleLayout->addWidget(new QLabel(tr("helm")));
-            titleLayout->addWidget(new QLabel(tr("mapper")));
-            pageLayout->addLayout(titleLayout);
-            };
+        QGridLayout* layout = new QGridLayout();
+        layout->addWidget(new QLabel(tr("channel"), this),0,0);
+        layout->addWidget(new QLabel(tr("position"), this),0,1);
+        layout->addWidget(new QLabel(tr("helm"), this),0,2);
+        layout->addWidget(new QLabel(tr("mapper"), this),0,3);
 
-        containerLayout->addLayout(page1Layout);
-		containerLayout->addSpacerItem(new QSpacerItem(QSizePolicy::Expanding, QSizePolicy::Expanding, QSizePolicy::Expanding, QSizePolicy::Expanding));
-        containerLayout->addLayout(page2Layout);
+        layout->addWidget(new QLabel(tr("    "), this),0,4);
 
-        InitTitleFunc(page1Layout);
-        InitTitleFunc(page2Layout);
+        layout->addWidget(new QLabel(tr("channel"), this),0,5);
+        layout->addWidget(new QLabel(tr("position"), this),0,6);
+        layout->addWidget(new QLabel(tr("helm"), this),0,7);
+        layout->addWidget(new QLabel(tr("mapper"), this),0,8);
+
         for (int i = 0; i < channelNum; ++i) {
-            QHBoxLayout* itemLayout = new QHBoxLayout();
             QLabel* title           = new QLabel(QString::number(i), this);
             QProgressBar* bar       = new QProgressBar(this);
             bar->setTextVisible(false);
@@ -190,20 +187,22 @@ void NavSettingView::InitializeChannelPanel()
             for (int i = 1; i < 35; ++i) {
                 comBox->addItem(GetPhysicalSignalSourceName(i));
             }
-
-			itemLayout->addWidget(title);
-			itemLayout->addWidget(bar);
-			itemLayout->addWidget(spinBox);
-			itemLayout->addWidget(comBox);
-
             if (i < channelNum / 2) {
-                page1Layout->addLayout(itemLayout);
+                layout->addWidget(title, i + 1, 0);
+                layout->addWidget(bar, i + 1, 1);
+                layout->addWidget(spinBox, i + 1, 2);
+                layout->addWidget(comBox, i + 1, 3);
             }
             else {
-                page2Layout->addLayout(itemLayout);
+                int offset = channelNum / 2-1;
+                layout->addWidget(title, (i-offset), 5);
+                layout->addWidget(bar,(i-offset),6);
+                layout->addWidget(spinBox, (i-offset), 7);
+                layout->addWidget(comBox, (i-offset), 8);
             }
             channelItems.push_back({bar, spinBox, comBox});
         }
+        widget->setLayout(layout);
     };
     InitFunc(sbusWidget1);
     InitFunc(sbusWidget2);
@@ -221,12 +220,24 @@ void NavSettingView::InitializeAdSettingPanel()
     titleLayout->addWidget(new QLabel(tr("Advanced settings"), this));
     layout->addLayout(titleLayout);
     QWidget* adSetting           = new QWidget();
-    QHBoxLayout* containerLayout = new QHBoxLayout(adSetting);
-    adSetting->setWindowTitle(tr("advance setting"));
+    QGridLayout* container = new QGridLayout(adSetting);
+	container->addWidget(new QLabel(tr("channel"), this),0,0);
+	container->addWidget(new QLabel(tr("reverse"), this),0,1);
+	container->addWidget(new QLabel(tr("minimal helm"), this),0,2);
+	container->addWidget(new QLabel(tr("midpoint calibration"), this),0,3);
+	container->addWidget(new QLabel(tr("maximal helm"), this),0,4);
+
+	container->addWidget(new QLabel(tr("     "), this),0,5);
+
+	container->addWidget(new QLabel(tr("channel"), this),0,6);
+	container->addWidget(new QLabel(tr("reverse"), this),0,7);
+	container->addWidget(new QLabel(tr("minimal helm"), this),0,8);
+	container->addWidget(new QLabel(tr("midpoint calibration"), this),0,9);
+	container->addWidget(new QLabel(tr("maximal helm"), this),0,10);
     layout->addWidget(adSetting);
-    auto InitFunc = [this](int index, QVBoxLayout* pageLayout, const QString& name) {
-        QHBoxLayout* itemLayout = new QHBoxLayout();
-        pageLayout->addLayout(itemLayout);
+
+    for (int i = 0; i < channelNum; ++i) {
+        QString name = QString("c%1").arg(i);
         QLabel* lab = new QLabel(name);
         QCheckBox* reverseChkBox = new QCheckBox();
         QSpinBox* min = new QSpinBox(this);
@@ -235,39 +246,22 @@ void NavSettingView::InitializeAdSettingPanel()
         mid->setRange(-2047, 2047);
         QSpinBox* max = new QSpinBox(this);
         max->setRange(0, 2047);
-
-		itemLayout->addWidget(lab);
-		itemLayout->addWidget(reverseChkBox);
-		itemLayout->addWidget(min);
-		itemLayout->addWidget(mid);
-		itemLayout->addWidget(max);
-        adSettingItems.push_back({reverseChkBox, min, mid, max});
-    };
-    QVBoxLayout* page1Layout = new QVBoxLayout();
-    QVBoxLayout* page2Layout = new QVBoxLayout();
-    auto InitTitleFunc = [this](QVBoxLayout* layout)
-	{
-		QLayout* cellLayout = new QHBoxLayout();
-		cellLayout->addWidget(new QLabel(tr("channel"), this));
-		cellLayout->addWidget(new QLabel(tr("reverse"), this));
-		cellLayout->addWidget(new QLabel(tr("minimal helm"), this));
-		cellLayout->addWidget(new QLabel(tr("midpoint calibration"), this));
-		cellLayout->addWidget(new QLabel(tr("maximal helm"), this));
-        layout->addLayout(cellLayout);
-	};
-    InitTitleFunc(page1Layout);
-    InitTitleFunc(page2Layout);
-
-    containerLayout->addLayout(page1Layout);
-    containerLayout->addSpacerItem(new QSpacerItem(QSizePolicy::Expanding, QSizePolicy::Expanding, QSizePolicy::Expanding, QSizePolicy::Expanding));
-    containerLayout->addLayout(page2Layout);
-    for (int i = 0; i < channelNum; ++i) {
+        int offsetx = 1;
+        int offsety = 0;
         if (i < channelNum / 2) {
-            InitFunc(i, page1Layout, QString("C%1").arg(i));
+            offsetx = 0;
+            offsety = 1;
         }
         else {
-            InitFunc(i, page2Layout, QString("C%1").arg(i));
+            offsetx = 6;
+            offsety = -channelNum / 2+1;
         }
+		container->addWidget(lab,i+offsety,0+offsetx);
+		container->addWidget(reverseChkBox,i+offsety,1+offsetx);
+		container->addWidget(min,i+offsety,2+offsetx);
+		container->addWidget(mid,i+offsety,3+offsetx);
+		container->addWidget(max,i+offsety,4+offsetx);
+        adSettingItems.push_back({reverseChkBox, min, mid, max});
     }
 }
 
@@ -290,7 +284,6 @@ void NavSettingView::InitializeBottomBar()
     QPushButton* calibration = new QPushButton(this);
     calibration->setText(tr("calibration"));
     bottomLayout->addWidget(calibration);
-    layout->addSpacerItem(new QSpacerItem(QSizePolicy::Expanding, QSizePolicy::Expanding, QSizePolicy::Expanding, QSizePolicy::Expanding));
     connect(calibration, &QPushButton::clicked, [this]() { emit Calibration(); });
 }
 

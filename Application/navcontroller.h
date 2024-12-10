@@ -9,6 +9,7 @@
 #include "serialport.h"
 #include <map>
 #include <queue>
+#include <mutex>
 
 class NavController : public QObject
 {
@@ -27,6 +28,7 @@ public:
     }
     void ParseRespond(const QByteArray& data);
     void Read(uint8_t sbus);
+    void Write(uint8_t sbus);
     void Request(const QByteArray& data);
     virtual void timerEvent(QTimerEvent* event) override;
 signals:
@@ -42,11 +44,14 @@ private:
     uint8_t currentIndex = 1;
     std::map<uint8_t, NavSettingModel*> models;
     std::queue<QByteArray> commands;
+    std::queue<QByteArray>immidiateCommands;
     int lastCommand;
     int writeTimerId  = -1;
     int readTimerId   = -1;
     int readInterval  = 5;
     int writeInterval = 500;
+    std::mutex commandMtx;
+    std::mutex immediateMtx;
 };
 
 #endif   // NAVCONTROLLER_H

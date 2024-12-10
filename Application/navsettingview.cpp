@@ -49,7 +49,7 @@ NavSettingView::NavSettingView(int channelNum, QWidget* parent)
 void NavSettingView::Initialize()
 {
     InitializeTopBar();
-    InitializeDebug();
+   // InitializeDebug();
     InitializeChannelPanel();
     InitializeAdSettingPanel();
     InitializeBottomBar();
@@ -302,10 +302,10 @@ void NavSettingView::Connect()
     }
 }
 
-void NavSettingView::SetModel(NavSettingModel* model)
+void NavSettingView::SetModel(NavSettingModel* model,uint8_t sbus)
 {
     for (int i = 0; i < channelNum; ++i) {
-        auto iter = channelItems[i];
+        auto iter = channelItems[i+(sbus-1)*16];
         SignalLock lock(iter.mapper);
         iter.mapper->setCurrentIndex(model->GetMapSlot(i));
     }

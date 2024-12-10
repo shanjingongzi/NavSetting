@@ -41,6 +41,7 @@ bool QtSerialPortImpl::Close()
 QByteArray QtSerialPortImpl::Read()
 {
     if (impl->isOpen()) {
+        //impl->waitForReadyRead();
         return impl->readAll();
     }
     return {};
@@ -57,8 +58,9 @@ bool QtSerialPortImpl::Write(const unsigned char* info, int length)
 bool QtSerialPortImpl::Write(const QByteArray& data)
 {
     if (impl->isOpen()) {
-        auto result = impl->write(data);
-        return result == data.size();
+        impl->waitForBytesWritten();
+		auto result = impl->write(data);
+		return result == data.size();
     }
     return false;
 }

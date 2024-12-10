@@ -19,6 +19,7 @@ NavController::NavController(QWidget* parent)
     models[2] = new NavSettingModel(channelNum);
     models[3] = new NavSettingModel(channelNum);
     enableListen.store(false, std::memory_order_relaxed);
+    startTimer(200);
 }
 void NavController::Initialize()
 {
@@ -32,6 +33,7 @@ void NavController::Initialize()
         if (device->Open()) {
             StartListen();
         }
+        Read(currentIndex);
     });
     connect(view, &NavSettingView::Close, [this]() {
         if (device) {
@@ -43,30 +45,34 @@ void NavController::Initialize()
 
     connect(view, &NavSettingView::RequestSignalSource, [this]() {
         if (device) {
-            device->Write(Command::GenerateRequestSignalSourceCmd(currentIndex), 6);
+            Request(Command::GenerateRequestSignalSourceCmd(currentIndex));
         }
     });
 
     connect(view, &NavSettingView::RequestReverse, [this]() {
         if (device) {
-            device->Write(Command::GenerateRequestReverseCmd(currentIndex), 6);
+            Request(Command::GenerateRequestReverseCmd(currentIndex));
         }
     });
     connect(view, &NavSettingView::RequestMinimalHelm, [this]() {
         if (device) {
-            device->Write(Command::GenerateRequestMinimalHelm(currentIndex), 6);
+            Request(Command::GenerateRequestMinimalHelm(currentIndex));
         }
     });
 
     connect(view, &NavSettingView::RequestMaximalHelm, [this]() {
         if (device) {
-            device->Write(Command::GenerateRequestMaximalHelm(currentIndex), 6);
+            Request(Command::GenerateRequestMaximalHelm(currentIndex));
         }
     });
 
     connect(view, &NavSettingView::RequestFineTune, [this]() {
         if (device) {
-            device->Write(Command::GenerateRequestFineTune(currentIndex), 6);
+            Request(Command::GenerateRequestFineTune(currentIndex));
+            Request(Command::GenerateRequestMaximalHelm(currentIndex));
+            Request(Command::GenerateRequestMinimalHelm(currentIndex));
+            Request(Command::GenerateRequestReverseCmd(currentIndex));
+            Request(Command::GenerateRequestSignalSourceCmd(currentIndex));
         }
     });
 
@@ -100,12 +106,20 @@ void NavController::Initialize()
     connect(view, &NavSettingView::MinimalHelmChanged, [this](int channel, int val) { Model()->SetMinimalHelm(channel, val); });
     connect(view, &NavSettingView::MiddleHeelmChanged, [this](int channel, int val) { Model()->SetMiddlelHelm(channel, val); });
     connect(view, &NavSettingView::MaximalHelmChanged, [this](int channel, int val) { Model()->SetMaximalHelm(channel, val); });
-    connect(view, &NavSettingView::sbusChanged, [this](int index) { this->currentIndex = index + 1; });
+    connect(view, &NavSettingView::sbusChanged, [this](int index) { 
+        this->currentIndex = index + 1; 
+        this->Read(currentIndex);
+        });
 }
 
 QWidget* NavController::View()
 {
     return view;
+}
+
+void NavController::Request(const QByteArray &data)
+{
+	device->Write(data);
 }
 
 void NavController::StartListen()
@@ -131,11 +145,33 @@ void NavController::StartListen()
     });
     enableListen.store(true, std::memory_order_relaxed);
     listenTask.detach();
-    auto id = listenTask.get_id();
 }
+
+void NavController::Read(uint8_t sbus)
+{
+	commands.push(Command::GenerateRequestFineTune(sbus));
+	commands.push(Command::GenerateRequestMaximalHelm(sbus));
+	commands.push(Command::GenerateRequestMinimalHelm(sbus));
+	commands.push(Command::GenerateRequestReverseCmd(sbus));
+	commands.push(Command::GenerateRequestSignalSourceCmd(sbus));
+}
+
 void NavController::StopListen()
 {
     enableListen.store(false, std::memory_order_relaxed);
+}
+
+void NavController::timerEvent(QTimerEvent* event)
+{
+    if (!commands.empty()) {
+        if (respondCommand == lastCommand) {
+			commands.pop();
+        }
+        if (!commands.empty()) {
+			device->Write(commands.front());
+			lastCommand = commands.front()[Command::cmdBit];
+        }
+    }
 }
 
 void NavController::ParseRespond(const QByteArray& data)
@@ -204,5 +240,6 @@ void NavController::ParseRespond(const QByteArray& data)
         }
         break;
     }
-	view->SetModel(model->second);
+	view->SetModel(model->second,currentIndex);
+    respondCommand.store(cmdBit);
 }

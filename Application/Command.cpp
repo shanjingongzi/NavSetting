@@ -120,7 +120,7 @@ QByteArray Command::GenerateMaximalHelmCmd(uint8_t sbus, NavSettingModel* model)
     return result;
 }
 
-uint8_t* Command::GenerateRequestSignalSourceCmd(uint8_t sbus)
+QByteArray Command::GenerateRequestSignalSourceCmd(uint8_t sbus)
 {
     auto result = new uint8_t[sizeof(read_template)];
     memcpy(result, read_template, 6);
@@ -129,9 +129,11 @@ uint8_t* Command::GenerateRequestSignalSourceCmd(uint8_t sbus)
     auto parity    = XOR(result + 2, 2);
     result[4]      = std::get<0>(parity);
     result[5]      = std::get<1>(parity);
-    return result;
+    QByteArray data((char*)result, 6);
+    delete result;
+    return data;
 }
-uint8_t* Command::GenerateRequestReverseCmd(uint8_t sbus)
+QByteArray Command::GenerateRequestReverseCmd(uint8_t sbus)
 {
     auto result = new uint8_t[sizeof(read_template)];
     memcpy(result, read_template, 6);
@@ -140,10 +142,12 @@ uint8_t* Command::GenerateRequestReverseCmd(uint8_t sbus)
     auto parity    = XOR(result + 2, 2);
     result[4]      = std::get<0>(parity);
     result[5]      = std::get<1>(parity);
-    return result;
+    QByteArray data((char*)result, 6);
+    delete result;
+    return data;
 }
 
-uint8_t* Command::GenerateRequestMinimalHelm(uint8_t sbus)
+QByteArray Command::GenerateRequestMinimalHelm(uint8_t sbus)
 {
     auto result = new uint8_t[sizeof(read_template)];
     memcpy(result, read_template, 6);
@@ -152,10 +156,12 @@ uint8_t* Command::GenerateRequestMinimalHelm(uint8_t sbus)
     auto parity    = XOR(result + 2, 2);
     result[4]      = std::get<0>(parity);
     result[5]      = std::get<1>(parity);
-    return result;
+    QByteArray data((char*)result, 6);
+    delete result;
+    return data;
 }
 
-uint8_t* Command::GenerateRequestMaximalHelm(uint8_t sbus)
+QByteArray Command::GenerateRequestMaximalHelm(uint8_t sbus)
 {
     auto result = new uint8_t[sizeof(read_template)];
     memcpy(result, read_template, 6);
@@ -164,10 +170,12 @@ uint8_t* Command::GenerateRequestMaximalHelm(uint8_t sbus)
     auto parity    = XOR(result + 2, 2);
     result[4]      = std::get<0>(parity);
     result[5]      = std::get<1>(parity);
-    return result;
+    QByteArray data((char*)result, 6);
+    delete result;
+    return data;
 }
 
-uint8_t* Command::GenerateRequestFineTune(uint8_t sbus)
+QByteArray Command::GenerateRequestFineTune(uint8_t sbus)
 {
     auto result = new uint8_t[sizeof(read_template)];
     memcpy(result, read_template, 6);
@@ -176,7 +184,9 @@ uint8_t* Command::GenerateRequestFineTune(uint8_t sbus)
     auto parity    = XOR(result + 2, 2);
     result[4]      = std::get<0>(parity);
     result[5]      = std::get<1>(parity);
-    return result;
+    QByteArray data((char*)result, 6);
+    delete result;
+    return data;
 }
 
 bool Command::ParityRespond(const QByteArray& data)

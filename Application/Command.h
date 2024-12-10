@@ -9,13 +9,12 @@ using uint8_t = unsigned char;
 class Command
 {
 public:
-    static uint8_t* GenerateRequestSignalSourceCmd(uint8_t sbus);
-    static uint8_t* GenerateRequestReverseCmd(uint8_t sbus);
-    static uint8_t* GenerateRequestMinimalHelm(uint8_t sbus);
-    static uint8_t* GenerateRequestMaximalHelm(uint8_t sbus);
-    static uint8_t* GenerateRequestFineTune(uint8_t sbus);
+    static QByteArray GenerateRequestSignalSourceCmd(uint8_t sbus);
+    static QByteArray GenerateRequestReverseCmd(uint8_t sbus);
+    static QByteArray GenerateRequestMinimalHelm(uint8_t sbus);
+    static QByteArray GenerateRequestMaximalHelm(uint8_t sbus);
+    static QByteArray GenerateRequestFineTune(uint8_t sbus);
 
-    static QByteArray GenerateMaximalHelCmd(uint8_t subs);
     static QByteArray GenerateMappSlotCmd(uint8_t sbus, NavSettingModel* model);
     static QByteArray GenerateReverseCmd(uint8_t sbus, NavSettingModel* model);
     static QByteArray GenerateMinimalHelmCmd(uint8_t sbus, NavSettingModel* model);
@@ -23,10 +22,8 @@ public:
     static QByteArray GenerateMaximalHelmCmd(uint8_t sbus, NavSettingModel* model);
 
     static QByteArray GenericWriteCmd(uint8_t cmd, uint8_t ctr);
-    static QByteArray GenericReadCmd(uint8_t cmd, uint8_t ctr);
     static void ParityCmd(QByteArray& data);
     static bool ParityRespond(const QByteArray& data);
-    static bool ParseRespond(const QByteArray& data, uint8_t& outCmdBit, uint8_t& outCtrBit, QByteArray& outBuffer);
 
     static std::tuple<uint8_t, uint8_t> XOR(const unsigned char* prx_data, unsigned char len);
     template<int N>

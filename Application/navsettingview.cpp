@@ -162,8 +162,21 @@ void NavSettingView::InitializeChannelPanel()
         QVBoxLayout* page1Layout     = new QVBoxLayout();
         QVBoxLayout* page2Layout     = new QVBoxLayout();
         QHBoxLayout* containerLayout = new QHBoxLayout(widget);
+        auto InitTitleFunc = [](QVBoxLayout *pageLayout) {
+            QHBoxLayout* titleLayout = new QHBoxLayout();
+            titleLayout->addWidget(new QLabel(tr("channel")));
+            titleLayout->addWidget(new QLabel(tr("position")));
+            titleLayout->addWidget(new QLabel(tr("helm")));
+            titleLayout->addWidget(new QLabel(tr("mapper")));
+            pageLayout->addLayout(titleLayout);
+            };
+
         containerLayout->addLayout(page1Layout);
+		containerLayout->addSpacerItem(new QSpacerItem(QSizePolicy::Expanding, QSizePolicy::Expanding, QSizePolicy::Expanding, QSizePolicy::Expanding));
         containerLayout->addLayout(page2Layout);
+
+        InitTitleFunc(page1Layout);
+        InitTitleFunc(page2Layout);
         for (int i = 0; i < channelNum; ++i) {
             QHBoxLayout* itemLayout = new QHBoxLayout();
             QLabel* title           = new QLabel(QString::number(i), this);
@@ -177,10 +190,12 @@ void NavSettingView::InitializeChannelPanel()
             for (int i = 1; i < 35; ++i) {
                 comBox->addItem(GetPhysicalSignalSourceName(i));
             }
-            itemLayout->addWidget(title);
-            itemLayout->addWidget(bar);
-            itemLayout->addWidget(spinBox);
-            itemLayout->addWidget(comBox);
+
+			itemLayout->addWidget(title);
+			itemLayout->addWidget(bar);
+			itemLayout->addWidget(spinBox);
+			itemLayout->addWidget(comBox);
+
             if (i < channelNum / 2) {
                 page1Layout->addLayout(itemLayout);
             }
@@ -201,6 +216,10 @@ void NavSettingView::InitializeChannelPanel()
 
 void NavSettingView::InitializeAdSettingPanel()
 {
+    QHBoxLayout *titleLayout = new QHBoxLayout();
+    titleLayout->setAlignment(Qt::AlignLeft);
+    titleLayout->addWidget(new QLabel(tr("Advanced settings"), this));
+    layout->addLayout(titleLayout);
     QWidget* adSetting           = new QWidget();
     QHBoxLayout* containerLayout = new QHBoxLayout(adSetting);
     adSetting->setWindowTitle(tr("advance setting"));
@@ -209,40 +228,36 @@ void NavSettingView::InitializeAdSettingPanel()
         QHBoxLayout* itemLayout = new QHBoxLayout();
         pageLayout->addLayout(itemLayout);
         QLabel* lab = new QLabel(name);
-        itemLayout->addWidget(lab);
         QCheckBox* reverseChkBox = new QCheckBox();
-        itemLayout->addWidget(reverseChkBox);
         QSpinBox* min = new QSpinBox(this);
         min->setRange(0, 2047);
-        itemLayout->addWidget(min);
         QSpinBox* mid = new QSpinBox(this);
         mid->setRange(-2047, 2047);
-        itemLayout->addWidget(mid);
         QSpinBox* max = new QSpinBox(this);
         max->setRange(0, 2047);
-        itemLayout->addWidget(max);
+
+		itemLayout->addWidget(lab);
+		itemLayout->addWidget(reverseChkBox);
+		itemLayout->addWidget(min);
+		itemLayout->addWidget(mid);
+		itemLayout->addWidget(max);
         adSettingItems.push_back({reverseChkBox, min, mid, max});
     };
     QVBoxLayout* page1Layout = new QVBoxLayout();
     QVBoxLayout* page2Layout = new QVBoxLayout();
-    {
-        auto InitTitleFunc = [=]() {
-            QHBoxLayout* labelLayout = new QHBoxLayout();
-            QLabel* lab              = new QLabel(tr("channel"), this);
-            labelLayout->addWidget(lab);
-            lab = new QLabel(tr("reverse"), this);
-            labelLayout->addWidget(lab);
-            lab = new QLabel(tr("min"), this);
-            labelLayout->addWidget(lab);
-            lab = new QLabel(tr("mid"), this);
-            labelLayout->addWidget(lab);
-            lab = new QLabel(tr("max"), this);
-            labelLayout->addWidget(lab);
-            return labelLayout;
-        };
-        page1Layout->addLayout(InitTitleFunc());
-        page2Layout->addLayout(InitTitleFunc());
-    }
+    auto InitTitleFunc = [this](QVBoxLayout* layout)
+	{
+		QLayout* cellLayout = new QHBoxLayout();
+		cellLayout->addWidget(new QLabel(tr("channel"), this));
+		cellLayout->addWidget(new QLabel(tr("reverse"), this));
+		cellLayout->addWidget(new QLabel(tr("minimal helm"), this));
+		cellLayout->addWidget(new QLabel(tr("midpoint calibration"), this));
+		cellLayout->addWidget(new QLabel(tr("maximal helm"), this));
+        layout->addLayout(cellLayout);
+	};
+    InitTitleFunc(page1Layout);
+    InitTitleFunc(page2Layout);
+
     containerLayout->addLayout(page1Layout);
     containerLayout->addSpacerItem(new QSpacerItem(QSizePolicy::Expanding, QSizePolicy::Expanding, QSizePolicy::Expanding, QSizePolicy::Expanding));
     containerLayout->addLayout(page2Layout);
@@ -277,11 +292,6 @@ void NavSettingView::InitializeBottomBar()
     bottomLayout->addWidget(calibration);
     layout->addSpacerItem(new QSpacerItem(QSizePolicy::Expanding, QSizePolicy::Expanding, QSizePolicy::Expanding, QSizePolicy::Expanding));
     connect(calibration, &QPushButton::clicked, [this]() { emit Calibration(); });
-
-    QPushButton* stopListen = new QPushButton(this);
-    stopListen->setText("stop listen");
-    bottomLayout->addWidget(stopListen);
-    connect(stopListen, &QPushButton::clicked, [this]() { emit StopListen(); });
 }
 
 void NavSettingView::Connect()

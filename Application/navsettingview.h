@@ -38,7 +38,8 @@ public:
     void InitializeBottomBar();
     void InitializeAdSettingPanel();
     void Connect();
-    void SetModel(NavSettingModel* model,uint8_t);
+    void SetModel(NavSettingModel* model, uint8_t);
+    void SetPosition(NavSettingModel* model, uint8_t);
 signals:
     void Open(const QString& name);
     void Close();

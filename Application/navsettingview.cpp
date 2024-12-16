@@ -2,6 +2,7 @@
 #include "navsettingmodel.h"
 #include <QCheckBox>
 #include <QComboBox>
+#include <QGridLayout>
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QProgressBar>
@@ -24,7 +25,7 @@
 #include <qspinbox.h>
 #include <qtabwidget.h>
 #include <qwidget.h>
-#include <QGridLayout>
+
 
 
 QString GetPhysicalSignalSourceName(int index)
@@ -50,7 +51,7 @@ NavSettingView::NavSettingView(int channelNum, QWidget* parent)
 void NavSettingView::Initialize()
 {
     InitializeTopBar();
-   // InitializeDebug();
+    // InitializeDebug();
     InitializeChannelPanel();
     layout->addSpacerItem(new QSpacerItem(QSizePolicy::Expanding, QSizePolicy::Expanding, QSizePolicy::Expanding, QSizePolicy::Expanding));
     InitializeAdSettingPanel();
@@ -163,21 +164,21 @@ void NavSettingView::InitializeChannelPanel()
 
     auto InitFunc = [this](QWidget* widget) {
         QGridLayout* layout = new QGridLayout();
-        layout->addWidget(new QLabel(tr("channel"), this),0,0);
-        layout->addWidget(new QLabel(tr("position"), this),0,1);
-        layout->addWidget(new QLabel(tr("helm"), this),0,2);
-        layout->addWidget(new QLabel(tr("mapper"), this),0,3);
+        layout->addWidget(new QLabel(tr("channel"), this), 0, 0);
+        layout->addWidget(new QLabel(tr("position"), this), 0, 1);
+        layout->addWidget(new QLabel(tr("helm"), this), 0, 2);
+        layout->addWidget(new QLabel(tr("mapper"), this), 0, 3);
 
-        layout->addWidget(new QLabel(tr("    "), this),0,4);
+        layout->addWidget(new QLabel(tr("    "), this), 0, 4);
 
-        layout->addWidget(new QLabel(tr("channel"), this),0,5);
-        layout->addWidget(new QLabel(tr("position"), this),0,6);
-        layout->addWidget(new QLabel(tr("helm"), this),0,7);
-        layout->addWidget(new QLabel(tr("mapper"), this),0,8);
+        layout->addWidget(new QLabel(tr("channel"), this), 0, 5);
+        layout->addWidget(new QLabel(tr("position"), this), 0, 6);
+        layout->addWidget(new QLabel(tr("helm"), this), 0, 7);
+        layout->addWidget(new QLabel(tr("mapper"), this), 0, 8);
 
         for (int i = 0; i < channelNum; ++i) {
-            QLabel* title           = new QLabel(QString::number(i), this);
-            QProgressBar* bar       = new QProgressBar(this);
+            QLabel* title     = new QLabel(QString::number(i), this);
+            QProgressBar* bar = new QProgressBar(this);
             bar->setTextVisible(false);
             bar->setRange(-100, 100);
             bar->setValue(0);
@@ -194,11 +195,11 @@ void NavSettingView::InitializeChannelPanel()
                 layout->addWidget(comBox, i + 1, 3);
             }
             else {
-                int offset = channelNum / 2-1;
-                layout->addWidget(title, (i-offset), 5);
-                layout->addWidget(bar,(i-offset),6);
-                layout->addWidget(spinBox, (i-offset), 7);
-                layout->addWidget(comBox, (i-offset), 8);
+                int offset = channelNum / 2 - 1;
+                layout->addWidget(title, (i - offset), 5);
+                layout->addWidget(bar, (i - offset), 6);
+                layout->addWidget(spinBox, (i - offset), 7);
+                layout->addWidget(comBox, (i - offset), 8);
             }
             channelItems.push_back({bar, spinBox, comBox});
         }
@@ -215,32 +216,32 @@ void NavSettingView::InitializeChannelPanel()
 
 void NavSettingView::InitializeAdSettingPanel()
 {
-    QHBoxLayout *titleLayout = new QHBoxLayout();
+    QHBoxLayout* titleLayout = new QHBoxLayout();
     titleLayout->setAlignment(Qt::AlignLeft);
     titleLayout->addWidget(new QLabel(tr("Advanced settings"), this));
     layout->addLayout(titleLayout);
-    QWidget* adSetting           = new QWidget();
+    QWidget* adSetting     = new QWidget();
     QGridLayout* container = new QGridLayout(adSetting);
-	container->addWidget(new QLabel(tr("channel"), this),0,0);
-	container->addWidget(new QLabel(tr("reverse"), this),0,1);
-	container->addWidget(new QLabel(tr("minimal helm"), this),0,2);
-	container->addWidget(new QLabel(tr("midpoint calibration"), this),0,3);
-	container->addWidget(new QLabel(tr("maximal helm"), this),0,4);
+    container->addWidget(new QLabel(tr("channel"), this), 0, 0);
+    container->addWidget(new QLabel(tr("reverse"), this), 0, 1);
+    container->addWidget(new QLabel(tr("minimal helm"), this), 0, 2);
+    container->addWidget(new QLabel(tr("midpoint calibration"), this), 0, 3);
+    container->addWidget(new QLabel(tr("maximal helm"), this), 0, 4);
 
-	container->addWidget(new QLabel(tr("     "), this),0,5);
+    container->addWidget(new QLabel(tr("     "), this), 0, 5);
 
-	container->addWidget(new QLabel(tr("channel"), this),0,6);
-	container->addWidget(new QLabel(tr("reverse"), this),0,7);
-	container->addWidget(new QLabel(tr("minimal helm"), this),0,8);
-	container->addWidget(new QLabel(tr("midpoint calibration"), this),0,9);
-	container->addWidget(new QLabel(tr("maximal helm"), this),0,10);
+    container->addWidget(new QLabel(tr("channel"), this), 0, 6);
+    container->addWidget(new QLabel(tr("reverse"), this), 0, 7);
+    container->addWidget(new QLabel(tr("minimal helm"), this), 0, 8);
+    container->addWidget(new QLabel(tr("midpoint calibration"), this), 0, 9);
+    container->addWidget(new QLabel(tr("maximal helm"), this), 0, 10);
     layout->addWidget(adSetting);
 
     for (int i = 0; i < channelNum; ++i) {
-        QString name = QString("c%1").arg(i);
-        QLabel* lab = new QLabel(name);
+        QString name             = QString("c%1").arg(i);
+        QLabel* lab              = new QLabel(name);
         QCheckBox* reverseChkBox = new QCheckBox();
-        QSpinBox* min = new QSpinBox(this);
+        QSpinBox* min            = new QSpinBox(this);
         min->setRange(0, 2047);
         QSpinBox* mid = new QSpinBox(this);
         mid->setRange(-2047, 2047);
@@ -254,13 +255,13 @@ void NavSettingView::InitializeAdSettingPanel()
         }
         else {
             offsetx = 6;
-            offsety = -channelNum / 2+1;
+            offsety = -channelNum / 2 + 1;
         }
-		container->addWidget(lab,i+offsety,0+offsetx);
-		container->addWidget(reverseChkBox,i+offsety,1+offsetx);
-		container->addWidget(min,i+offsety,2+offsetx);
-		container->addWidget(mid,i+offsety,3+offsetx);
-		container->addWidget(max,i+offsety,4+offsetx);
+        container->addWidget(lab, i + offsety, 0 + offsetx);
+        container->addWidget(reverseChkBox, i + offsety, 1 + offsetx);
+        container->addWidget(min, i + offsety, 2 + offsetx);
+        container->addWidget(mid, i + offsety, 3 + offsetx);
+        container->addWidget(max, i + offsety, 4 + offsetx);
         adSettingItems.push_back({reverseChkBox, min, mid, max});
     }
 }
@@ -305,12 +306,14 @@ void NavSettingView::Connect()
     }
 }
 
-void NavSettingView::SetModel(NavSettingModel* model,uint8_t sbus)
+void NavSettingView::SetModel(NavSettingModel* model, uint8_t sbus)
 {
     for (int i = 0; i < channelNum; ++i) {
-        auto iter = channelItems[i+(sbus-1)*16];
-        SignalLock lock(iter.mapper);
+        auto iter = channelItems[i + (sbus - 1) * 16];
+        SignalLock lock(iter.mapper), lock2(iter.position);
         iter.mapper->setCurrentIndex(model->GetMapSlot(i));
+        iter.position->setMinimum(model->GetMinimalHelm(0));
+        iter.position->setMaximum(model->GetMaximalHelm(0));
     }
     for (int i = 0; i < channelNum; ++i) {
         auto& iter = adSettingItems[i];
@@ -319,5 +322,15 @@ void NavSettingView::SetModel(NavSettingModel* model,uint8_t sbus)
         iter.minHelm->setValue(model->GetMinimalHelm(i));
         iter.maxHelm->setValue(model->GetMaximalHelm(i));
         iter.midHelm->setValue(model->GetMiddleHelm(i));
+    }
+}
+
+void NavSettingView::SetPosition(NavSettingModel* model, uint8_t sbus)
+{
+    for (int i = 0; i < channelNum; ++i) {
+        auto iter = channelItems[i + (sbus - 1) * 16];
+        if (model->GetPosition(i) != iter.position->value()) {
+            iter.position->setValue(model->GetPosition(i));
+        }
     }
 }

@@ -1,6 +1,7 @@
 #ifndef NAVCONTROLLER_H
 #define NAVCONTROLLER_H
 #include <QObject>
+#include <qstringview.h>
 #include <qtmetamacros.h>
 #include <qwidget.h>
 
@@ -8,8 +9,9 @@
 #include "navsettingview.h"
 #include "serialport.h"
 #include <map>
-#include <queue>
 #include <mutex>
+#include <queue>
+
 
 class NavController : public QObject
 {
@@ -27,6 +29,7 @@ public:
         return iter->second;
     }
     void ParseRespond(const QByteArray& data);
+    bool ParseSbusFramebuffer(const QByteArray& data);
     void Read(uint8_t sbus);
     void Write(uint8_t sbus);
     void Request(const QByteArray& data);
@@ -44,7 +47,7 @@ private:
     uint8_t currentIndex = 1;
     std::map<uint8_t, NavSettingModel*> models;
     std::queue<QByteArray> commands;
-    std::queue<QByteArray>immidiateCommands;
+    std::queue<QByteArray> immidiateCommands;
     int lastCommand;
     int writeTimerId  = -1;
     int readTimerId   = -1;

@@ -6,7 +6,10 @@
 #include "serialport.h"
 #include <QTimerEvent>
 #include <atomic>
+#include <cstdint>
 #include <qdebug.h>
+#include <qstringview.h>
+#include <qtmetamacros.h>
 
 
 NavController::NavController(QWidget* parent)
@@ -115,13 +118,13 @@ void NavController::Initialize()
         if (device) {
             this->Read(currentIndex);
         }
-        });
+    });
 
     connect(view, &NavSettingView::Write, [this]() {
         if (device) {
             this->Write(currentIndex);
         }
-        });
+    });
 }
 
 QWidget* NavController::View()
@@ -144,24 +147,24 @@ void NavController::StartListen()
 void NavController::Read(uint8_t sbus)
 {
     {
-        std::lock_guard<std::mutex>lock(commandMtx);
-		commands.push(Command::GenerateRequestFineTune(sbus));
-		commands.push(Command::GenerateRequestMaximalHelm(sbus));
-		commands.push(Command::GenerateRequestMinimalHelm(sbus));
-		commands.push(Command::GenerateRequestReverseCmd(sbus));
-		commands.push(Command::GenerateRequestSignalSourceCmd(sbus));
+        std::lock_guard<std::mutex> lock(commandMtx);
+        commands.push(Command::GenerateRequestFineTune(sbus));
+        commands.push(Command::GenerateRequestMaximalHelm(sbus));
+        commands.push(Command::GenerateRequestMinimalHelm(sbus));
+        commands.push(Command::GenerateRequestReverseCmd(sbus));
+        commands.push(Command::GenerateRequestSignalSourceCmd(sbus));
     }
 }
 
 void NavController::Write(uint8_t sbus)
 {
     {
-		std::lock_guard<std::mutex>lock(immediateMtx);
-		immidiateCommands.push(Command::GenerateMappSlotCmd(sbus,Model()));
-		immidiateCommands.push(Command::GenerateReverseCmd(sbus,Model()));
-		immidiateCommands.push(Command::GenerateMinimalHelmCmd(sbus,Model()));
-		immidiateCommands.push(Command::GenerateMaximalHelmCmd(sbus,Model()));
-		immidiateCommands.push(Command::GenerateMiddleHelmCmd(sbus,Model()));
+        std::lock_guard<std::mutex> lock(immediateMtx);
+        immidiateCommands.push(Command::GenerateMappSlotCmd(sbus, Model()));
+        immidiateCommands.push(Command::GenerateReverseCmd(sbus, Model()));
+        immidiateCommands.push(Command::GenerateMinimalHelmCmd(sbus, Model()));
+        immidiateCommands.push(Command::GenerateMaximalHelmCmd(sbus, Model()));
+        immidiateCommands.push(Command::GenerateMiddleHelmCmd(sbus, Model()));
     }
 }
 
@@ -181,8 +184,8 @@ void NavController::timerEvent(QTimerEvent* event)
         if (!commands.empty()) {
             if (respondCommand == lastCommand) {
                 {
-                    std::lock_guard<std::mutex>lock(commandMtx);
-					commands.pop();
+                    std::lock_guard<std::mutex> lock(commandMtx);
+                    commands.pop();
                 }
             }
             if (!commands.empty()) {
@@ -193,8 +196,8 @@ void NavController::timerEvent(QTimerEvent* event)
         if (!immidiateCommands.empty()) {
             device->Write(immidiateCommands.front());
             {
-				std::lock_guard<std::mutex>lock(immediateMtx);
-				immidiateCommands.pop();
+                std::lock_guard<std::mutex> lock(immediateMtx);
+                immidiateCommands.pop();
             }
         }
     }
@@ -208,12 +211,12 @@ void NavController::timerEvent(QTimerEvent* event)
                     msg = msg.toHex(' ');
                     emit MessageChanged(msg);
                 }
-                qDebug() << msg;
-                qDebug() << msg.size();
             }
-            if (msg.size()) {
-				msg = msg.toHex(' ');
-                qDebug() << msg;
+            else if (msg.size() == 25) {
+                if (ParseSbusFramebuffer(msg)) {
+                    msg = msg.toHex(' ');
+                    emit MessageChanged(msg);
+                }
             }
         }
     }
@@ -287,4 +290,33 @@ void NavController::ParseRespond(const QByteArray& data)
     }
     view->SetModel(model->second, currentIndex);
     respondCommand.store(cmdBit);
+}
+
+bool NavController::ParseSbusFramebuffer(const QByteArray& data)
+{
+
+    if (data.size() != 25) {}
+    if (data[0] != 0x0f || data[24] != 0x00) {
+        return false;
+    }
+    uint8_t* ptr = (uint8_t*)data.data();
+    ++ptr;
+
+    auto model = Model();
+    if (!model) {
+        return false;
+    }
+    for (int i = 0; i < 16; ++i) {
+        int byteIndex = i * 11 / 8;     // 每个通道数据从哪些字节中读取
+        int bitShift  = (i * 11) % 8;   // 计算每个通道数据的位置偏移
+        // 高字节数据
+        uint16_t highByte = data[byteIndex];   // 获取高字节
+        // 低字节数据的前3位
+        uint16_t lowByte = data[byteIndex + 1] & 0x07;   // 获取低字节的前3位
+
+        // 组合高字节和低字节的11位数据
+        model->SetPosition(i, (highByte << (3 - bitShift)) | (lowByte >> bitShift));
+    }
+    view->SetPosition(model, currentIndex);
+    return true;
 }

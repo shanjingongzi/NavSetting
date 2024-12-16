@@ -4,7 +4,7 @@
 #include <QDateTime>
 #include <QFile>
 #include <qdatetime.h>
-
+#include <Windows.h>
 
 int main(int argc, char* argv[])
 {

@@ -28,6 +28,7 @@ void NavController::Initialize()
         }
         device = new SerialPort(new QtSerialPortImpl(name, 100000, 2, 8, 2));
         if (device->Open()) {
+            qDebug() << "open serial port success,begin listen thread:";
             StartListen();
         }
         Read(currentIndex);
@@ -209,6 +210,10 @@ void NavController::timerEvent(QTimerEvent* event)
                 }
                 qDebug() << msg;
                 qDebug() << msg.size();
+            }
+            if (msg.size()) {
+				msg = msg.toHex(' ');
+                qDebug() << msg;
             }
         }
     }

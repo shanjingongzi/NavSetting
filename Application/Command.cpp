@@ -130,9 +130,24 @@ QByteArray Command::GenerateRequestSignalSourceCmd(uint8_t sbus)
     result[4]      = std::get<0>(parity);
     result[5]      = std::get<1>(parity);
     QByteArray data((char*)result, 6);
-    delete result;
+    delete[] result;
     return data;
 }
+
+QByteArray Command::GenerateRequestPositionSourceCmd(uint8_t sbus)
+{
+    auto result = new uint8_t[sizeof(read_template)];
+    memcpy(result, read_template, 6);
+    result[cmdBit] = position;
+    result[ctrBit] = sbus;
+    auto parity    = XOR(result + 2, 2);
+    result[4]      = std::get<0>(parity);
+    result[5]      = std::get<1>(parity);
+    QByteArray data((char*)result, 6);
+    delete[] result;
+    return data;
+}
+
 QByteArray Command::GenerateRequestReverseCmd(uint8_t sbus)
 {
     auto result = new uint8_t[sizeof(read_template)];
@@ -143,7 +158,7 @@ QByteArray Command::GenerateRequestReverseCmd(uint8_t sbus)
     result[4]      = std::get<0>(parity);
     result[5]      = std::get<1>(parity);
     QByteArray data((char*)result, 6);
-    delete result;
+    delete[] result;
     return data;
 }
 
@@ -157,7 +172,7 @@ QByteArray Command::GenerateRequestMinimalHelm(uint8_t sbus)
     result[4]      = std::get<0>(parity);
     result[5]      = std::get<1>(parity);
     QByteArray data((char*)result, 6);
-    delete result;
+    delete[] result;
     return data;
 }
 
@@ -171,7 +186,7 @@ QByteArray Command::GenerateRequestMaximalHelm(uint8_t sbus)
     result[4]      = std::get<0>(parity);
     result[5]      = std::get<1>(parity);
     QByteArray data((char*)result, 6);
-    delete result;
+    delete[] result;
     return data;
 }
 
@@ -185,7 +200,7 @@ QByteArray Command::GenerateRequestFineTune(uint8_t sbus)
     result[4]      = std::get<0>(parity);
     result[5]      = std::get<1>(parity);
     QByteArray data((char*)result, 6);
-    delete result;
+    delete[] result;
     return data;
 }
 

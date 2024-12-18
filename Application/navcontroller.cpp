@@ -24,12 +24,12 @@ NavController::NavController(QWidget* parent)
 void NavController::Initialize()
 {
     view->Initialize();
-    connect(view, &NavSettingView::Open, [this](const QString& name) {
+    connect(view, &NavSettingView::Open, [this](const QString& name,int baud) {
         if (device) {
             StopListen();
             delete device;
         }
-        device = new SerialPort(new QtSerialPortImpl(name, 100000, 2, 8, 2));
+        device = new SerialPort(new QtSerialPortImpl(name, baud, 2, 8, 2));
         if (device->Open()) {
             qDebug() << "open serial port success,begin listen thread:";
             StartListen();
@@ -153,6 +153,7 @@ void NavController::Read(uint8_t sbus)
         commands.push(Command::GenerateRequestMinimalHelm(sbus));
         commands.push(Command::GenerateRequestReverseCmd(sbus));
         commands.push(Command::GenerateRequestSignalSourceCmd(sbus));
+        //commands.push(Command::GenerateRequestPositionSourceCmd(sbus));
     }
 }
 
@@ -287,6 +288,12 @@ void NavController::ParseRespond(const QByteArray& data)
             model->second->SetMiddlelHelm(i, val);
         }
         break;
+    case Command::position:
+        for (int i = 0; i < channelNum; ++i) {
+            auto val = parseUnsignedValue();
+            model->second->SetPosition(i, val);
+        }
+        break;
     }
     view->SetModel(model->second, currentIndex);
     respondCommand.store(cmdBit);
@@ -306,16 +313,25 @@ bool NavController::ParseSbusFramebuffer(const QByteArray& data)
     if (!model) {
         return false;
     }
+	uint16_t result[16];
+	result[0] = ((data[2] << 8) + (data[1])) & 0x07ff;
+	result[1] = ((data[3] << 5) + (data[2] >> 3)) & 0x07ff;
+	result[2] = ((data[5] << 10) + (data[4] << 2) + (data[3] >> 6)) & 0x07ff;
+	result[3] = ((data[6] << 7) + (data[5] >> 1)) & 0x07ff;
+	result[4] = ((data[7] << 4) + (data[6] >> 4)) & 0x07ff;
+	result[5] = ((data[9] << 9) + (data[8] << 1) + (data[7] >> 7)) & 0x07ff;
+	result[6] = ((data[10] << 6) + (data[9] >> 2)) & 0x07ff;
+	result[7] = ((data[11] << 3) + (data[10] >> 5)) & 0x07ff;
+	result[8] = ((data[13] << 8) + (data[12])) & 0x07ff;
+	result[9] = ((data[14] << 5) + (data[13] >> 3)) & 0x07ff;
+	result[10] = ((data[16] << 10) + (data[15] << 2) + (data[14] >> 6)) & 0x07ff;
+	result[11] = ((data[17] << 7) + (data[16] >> 1)) & 0x07ff;
+	result[12] = ((data[18] << 4) + (data[17] >> 4)) & 0x07ff;
+	result[13] = ((data[20] << 9) + (data[19] << 1) + (data[18] >> 7)) & 0x07ff;
+	result[14] = ((data[21] << 6) + (data[20] >> 2)) & 0x07ff;
+	result[15] = ((data[22] << 3) + (data[21] >> 5)) & 0x07ff;
     for (int i = 0; i < 16; ++i) {
-        int byteIndex = i * 11 / 8;     // 每个通道数据从哪些字节中读取
-        int bitShift  = (i * 11) % 8;   // 计算每个通道数据的位置偏移
-        // 高字节数据
-        uint16_t highByte = data[byteIndex];   // 获取高字节
-        // 低字节数据的前3位
-        uint16_t lowByte = data[byteIndex + 1] & 0x07;   // 获取低字节的前3位
-
-        // 组合高字节和低字节的11位数据
-        model->SetPosition(i, (highByte << (3 - bitShift)) | (lowByte >> bitShift));
+        model->SetPosition(i, result[i]);
     }
     view->SetPosition(model, currentIndex);
     return true;

@@ -41,7 +41,7 @@ public:
     void SetModel(NavSettingModel* model, uint8_t);
     void SetPosition(NavSettingModel* model, uint8_t);
 signals:
-    void Open(const QString& name);
+    void Open(const QString& name,int baud);
     void Close();
     void Read();
     void Write();

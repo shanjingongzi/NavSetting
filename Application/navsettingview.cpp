@@ -76,25 +76,30 @@ void NavSettingView::InitializeTopBar()
     QLabel* lab = new QLabel();
     lab->setText(tr("device"));
     QPushButton* openBtn = new QPushButton(this);
-    connect(openBtn, &QPushButton::clicked, [this, serialPortGroup]() {
-        auto name = serialPortGroup->currentText();
-        if (name.length()) {
-            emit Open(name);
-        }
-    });
     openBtn->setText(tr("open"));
     QPushButton* closeBtn = new QPushButton(this);
     connect(closeBtn, &QPushButton::clicked, [this]() { emit Close(); });
     closeBtn->setText("close");
 
+    QSpinBox* baudRate = new QSpinBox(this);
+    baudRate->setRange(0, 1000000);
+    baudRate->setValue(100000);
     QHBoxLayout* toolBarLayout = new QHBoxLayout();
     toolBarLayout->setAlignment(Qt::AlignRight);
     toolBarLayout->addWidget(checkBtn);
     toolBarLayout->addWidget(lab);
     toolBarLayout->addWidget(serialPortGroup);
+    toolBarLayout->addWidget(new QLabel(tr("Baud"), this));
+    toolBarLayout->addWidget(baudRate);
     toolBarLayout->addWidget(openBtn);
     toolBarLayout->addWidget(closeBtn);
     layout->addLayout(toolBarLayout);
+    connect(openBtn, &QPushButton::clicked, [this, serialPortGroup,baudRate]() {
+        auto name = serialPortGroup->currentText();
+        if (name.length()) {
+            emit Open(name,baudRate->value());
+        }
+    });
 }
 
 void NavSettingView::InitializeDebug()
@@ -177,13 +182,19 @@ void NavSettingView::InitializeChannelPanel()
         layout->addWidget(new QLabel(tr("mapper"), this), 0, 8);
 
         for (int i = 0; i < channelNum; ++i) {
-            QLabel* title     = new QLabel(QString::number(i), this);
+            QLabel* title     = new QLabel(QString::number(i+1), this);
             QProgressBar* bar = new QProgressBar(this);
             bar->setTextVisible(false);
-            bar->setRange(-100, 100);
+            bar->setRange(0, 2047);
             bar->setValue(0);
             QSpinBox* spinBox = new QSpinBox(this);
             spinBox->setValue(0);
+            spinBox->setRange(0, 2047);
+            spinBox->setEnabled(false);
+            spinBox->setStyleSheet("QSpinBox::up-button{width: 0px; height: 0px;}"
+                "QSpinBox::up-arrow{image: none;}"
+                "QSpinBox::down-button{width: 0px; height: 0px;}"
+                "QSpinBox::down-arrow{image: none;}");
             QComboBox* comBox = new QComboBox(this);
             for (int i = 1; i < 35; ++i) {
                 comBox->addItem(GetPhysicalSignalSourceName(i));
@@ -293,7 +304,7 @@ void NavSettingView::Connect()
     for (int i = 0; i < channelItems.size(); ++i) {
         auto iter = channelItems[i];
         connect(iter.mapper, &QComboBox::currentIndexChanged, [i, this](int slot) {
-            emit MapperChanged(i, slot);
+            emit MapperChanged(i%16, slot+1);
             qDebug() << "";
         });
     }
@@ -312,8 +323,12 @@ void NavSettingView::SetModel(NavSettingModel* model, uint8_t sbus)
         auto iter = channelItems[i + (sbus - 1) * 16];
         SignalLock lock(iter.mapper), lock2(iter.position);
         iter.mapper->setCurrentIndex(model->GetMapSlot(i));
-        iter.position->setMinimum(model->GetMinimalHelm(0));
-        iter.position->setMaximum(model->GetMaximalHelm(0));
+        if (model->GetMaximalHelm(i) > model->GetMinimalHelm(i)) {
+			iter.position->setRange(model->GetMinimalHelm(i), model->GetMaximalHelm(i));
+        }
+        else {
+			iter.position->setRange(model->GetMaximalHelm(i), model->GetMinimalHelm(i));
+        }
     }
     for (int i = 0; i < channelNum; ++i) {
         auto& iter = adSettingItems[i];
@@ -331,6 +346,7 @@ void NavSettingView::SetPosition(NavSettingModel* model, uint8_t sbus)
         auto iter = channelItems[i + (sbus - 1) * 16];
         if (model->GetPosition(i) != iter.position->value()) {
             iter.position->setValue(model->GetPosition(i));
+            iter.helm->setValue(model->GetPosition(i));
         }
     }
 }

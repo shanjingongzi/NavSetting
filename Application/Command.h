@@ -9,6 +9,7 @@ using uint8_t = unsigned char;
 class Command
 {
 public:
+    static QByteArray GenerateRequestPositionSourceCmd(uint8_t sbus);
     static QByteArray GenerateRequestSignalSourceCmd(uint8_t sbus);
     static QByteArray GenerateRequestReverseCmd(uint8_t sbus);
     static QByteArray GenerateRequestMinimalHelm(uint8_t sbus);
@@ -36,6 +37,7 @@ public:
     }
 
 
+    constexpr static uint8_t position = 0;
     constexpr static uint8_t signalSource     = 1;
     constexpr static uint8_t reverse          = 2;
     constexpr static uint8_t maximalHelm      = 3;
